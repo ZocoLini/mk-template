@@ -1,7 +1,7 @@
 use crate::CONFIG_DIR;
 use std::cell::LazyCell;
 use std::fs;
-use std::fs::{exists, DirEntry, ReadDir};
+use std::fs::{DirEntry, ReadDir};
 use std::io;
 use std::path::{Path, PathBuf};
 

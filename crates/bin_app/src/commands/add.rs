@@ -16,7 +16,7 @@ pub fn execute(s: &Vec<String>)
 
     let template_name = match flags.get("-n") {
         Some(name) => name,
-        None => &extrarct_name_from_path(template_path)
+        None => &extract_name_from_path(template_path)
             .to_str()
             .expect("Should exist")
             .to_string()
@@ -29,7 +29,7 @@ pub fn execute(s: &Vec<String>)
     }
 }
 
-fn extrarct_name_from_path(path: &str) -> OsString
+fn extract_name_from_path(path: &str) -> OsString
 {
     let path = PathBuf::from(path);
     let file_name = path.file_name().expect("Should have a name");
