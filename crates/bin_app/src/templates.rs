@@ -58,7 +58,7 @@ pub fn add_template(name: &str, path: &str)
 
 fn build_template(path: &str) -> Result<Box<dyn Template>, TemplateError>
 {
-    if path.starts_with("https://") || path.starts_with("http://") {
+    if path.ends_with(".git") {
         return Ok(Box::new(GitTemplate::new(path)));
     }
 
