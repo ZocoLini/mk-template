@@ -8,7 +8,7 @@ mod commands;
 mod config;
 mod templates;
 
-const BIN_NAME: &str = "mktemplate";
+const BIN_NAME: &str = "mkt";
 const CONFIG_DIR: LazyCell<PathBuf> = LazyCell::new(|| {
     let path = PathBuf::from(env::var("HOME").expect("Should have a HOME var.") + "/." + BIN_NAME);
     
