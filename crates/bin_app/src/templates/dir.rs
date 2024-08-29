@@ -56,12 +56,7 @@ impl Template for DirTemplate
     }
 
     fn remove(&self) {
-        fs::remove_dir(&self.dir).expect("Should remove the directory.");
-    }
-
-    fn into_data(&self) -> TemplateData
-    {
-        TemplateData::new(DIR_TEMPLATE, self.dir.to_str().expect("Should be a string"))
+        fs::remove_dir_all(&self.dir).expect("Should remove the directory.");
     }
 
     fn validate(&self) -> bool

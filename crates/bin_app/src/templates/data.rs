@@ -26,7 +26,7 @@ impl TemplateData
     {
         serde_json::from_str(json)
     }
-    
+
     pub fn save(&self, name: &str) -> Result<(), io::Error>
     {
         let json_data =
@@ -43,12 +43,11 @@ impl TemplateData
         let src = src.as_path();
         let data = std::fs::read_to_string(src)?;
 
-        let template_data: TemplateData =
-            serde_json::from_str(data.as_str())?;
+        let template_data: TemplateData = Self::from_json(data.as_str())?;
 
         Ok(template_data)
     }
-
+    
     pub fn to_template(&self) -> Box<dyn Template>
     {
         match self.class.as_str() {

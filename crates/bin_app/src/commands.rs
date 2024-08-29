@@ -2,6 +2,7 @@ mod add;
 mod list;
 mod remove;
 mod spawn;
+mod version;
 
 use crate::commands::Command::{Add, Remove, Spawn};
 use crate::commands::CommandBuildError::NotRecognisedCommand;
@@ -15,6 +16,7 @@ pub enum Command
     Add(Vec<String>),
     Remove(Vec<String>),
     List,
+    Version,
 }
 
 impl FromStr for Command
@@ -35,8 +37,9 @@ impl FromStr for Command
         match main_command {
             "spawn" => Ok(Spawn(command_instr)),
             "add" => Ok(Add(command_instr)),
-            "remove" => Ok(Remove(command_instr)),
+            "rm" => Ok(Remove(command_instr)),
             "list" => Ok(Command::List),
+            "version" => Ok(Command::Version),
             _ => Err(NotRecognisedCommand),
         }
     }
@@ -112,6 +115,11 @@ mod tests
         assert_eq!(result.get("-p").unwrap(), "path");
         assert_eq!(result.get("-r").unwrap(), "");
         assert_eq!(result.get("-a").unwrap(), "");
+        
+        let args = vec!["mkt", "remove", "-n", "crates"];
+        let result = map_flags(&args.iter().map(|s| s.to_string()).collect());
+
+        assert_eq!(result.get("-n").unwrap(), "crates");
     }
 
     #[test]

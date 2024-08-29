@@ -1,4 +1,3 @@
-use std::env::args;
 use crate::templates::data::TemplateData;
 use crate::templates::{is_valid_name, Template, TemplateError, SAVE_TEMPLATES_DIR};
 use std::process;
@@ -54,11 +53,6 @@ impl Template for GitTemplate
     fn remove(&self)
     { 
         // Nothing to do here
-    }
-
-    fn into_data(&self) -> TemplateData
-    {
-        TemplateData::new(GIT_TEMPLATE, &self.url)
     }
 
     fn validate(&self) -> bool

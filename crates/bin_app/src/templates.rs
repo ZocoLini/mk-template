@@ -27,8 +27,6 @@ pub trait Template
     fn generate(&self, name: &str) -> Result<(), TemplateError>;
     fn save(&self, name: &str) -> Result<(), TemplateError>;
     fn remove(&self);
-    #[allow(clippy::wrong_self_convention)]
-    fn into_data(&self) -> TemplateData;
     fn validate(&self) -> bool;
 }
 
@@ -80,7 +78,7 @@ pub fn remove_template(name: &str)
     }
 
     let template_path = template_path.unwrap();
-
+    
     if let Ok(template_data) =
         TemplateData::from_json(fs::read_to_string(&template_path).unwrap().as_str())
     {
@@ -88,6 +86,7 @@ pub fn remove_template(name: &str)
         let template = template.as_ref();
 
         template.remove();
+        fs::remove_file(template_path).expect("Should remove the template.");
     } else {
         fs::remove_file(template_path).expect("Should remove the template.");
         println!("Template removed but data wasn't parseable. Any related files were not removed.");
@@ -134,9 +133,7 @@ pub fn get_template_data_path(name: &str) -> Option<PathBuf>
 
 pub fn get_template_data(name: &str) -> Option<TemplateData>
 {
-    let path = PathBuf::from(SAVE_TEMPLATES_DIR.as_path().join(name));
-
-    if let Ok(template_data) = TemplateData::from_json(fs::read_to_string(path).unwrap().as_str()) {
+    if let Ok(template_data) = TemplateData::load(name) {
         Some(template_data)
     } else {
         None
