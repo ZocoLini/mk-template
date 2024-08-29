@@ -14,7 +14,7 @@ pub fn execute(s: &Vec<String>)
 
     let template_output_name = flags.get("-o").unwrap_or_else(|| template_name);
     
-    templates::generate_template(template_name, template_output_name);
+    templates::generate(template_name, template_output_name);
 }
 
 fn print_command_usage()

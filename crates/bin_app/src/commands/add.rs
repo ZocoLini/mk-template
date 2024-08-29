@@ -22,7 +22,7 @@ pub fn execute(s: &Vec<String>)
             .to_string()
     };
     
-    if flags.contains_key("-r") || !templates::exists_template(template_name) {
+    if flags.contains_key("-r") || templates::get_template_data_path(template_name).is_none() {
         templates::add_template(template_name, template_path);
     } else {
         println!("That template name is already being used. Use -r to replace it.");

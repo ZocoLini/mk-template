@@ -1,5 +1,5 @@
-use crate::{BIN_NAME, templates};
 use crate::commands::map_flags;
+use crate::{templates, BIN_NAME};
 
 pub fn execute(s: &Vec<String>)
 {

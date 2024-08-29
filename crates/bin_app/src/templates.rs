@@ -1,11 +1,18 @@
+mod data;
+mod dir;
+mod git;
+
+use crate::templates::data::TemplateData;
+use crate::templates::dir::DirTemplate;
+use crate::templates::git::GitTemplate;
 use crate::CONFIG_DIR;
 use std::cell::LazyCell;
 use std::fs;
-use std::fs::{DirEntry, ReadDir};
+use std::fs::DirEntry;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
-const SAVE_TEMPLATES_DIR: LazyCell<PathBuf> = LazyCell::new(|| {
+pub const SAVE_TEMPLATES_DIR: LazyCell<PathBuf> = LazyCell::new(|| {
     let path = CONFIG_DIR.join("templates");
 
     if !path.exists() {
@@ -19,6 +26,9 @@ pub trait Template
 {
     fn generate(&self, name: &str) -> Result<(), TemplateError>;
     fn save(&self, name: &str) -> Result<(), TemplateError>;
+    fn remove(&self);
+    #[allow(clippy::wrong_self_convention)]
+    fn into_data(&self) -> TemplateData;
     fn validate(&self) -> bool;
 }
 
@@ -27,66 +37,8 @@ pub enum TemplateError
 {
     IoError,
     InvalidTemplate,
+    ErrorExecutingGit,
 }
-
-// region: DirTemplate
-
-pub struct DirTemplate
-{
-    dir: PathBuf,
-}
-
-impl Template for DirTemplate
-{
-    fn generate(&self, name: &str) -> Result<(), TemplateError>
-    {
-        if name.contains("/") || name.contains("\\") { 
-            return Err(TemplateError::InvalidTemplate);
-        }
-        
-        let src = self.dir.as_path();
-        let dst = PathBuf::from(name);
-        
-        copy_dir_all(src, &dst).map_err(|_e| TemplateError::IoError)
-    }
-
-    fn save(&self, name: &str) -> Result<(), TemplateError>
-    {
-        let src = self.dir.as_path();
-        let dst = SAVE_TEMPLATES_DIR.as_path().join(name);
-        let dst = dst.as_path();
-        
-        copy_dir_all(src, dst).map_err(|_e| TemplateError::IoError)
-    }
-
-    fn validate(&self) -> bool {
-        true
-    }
-}
-
-fn copy_dir_all(src: &Path, dst: &Path) -> io::Result<()> {
-    if !dst.exists() {
-        fs::create_dir_all(dst)?;
-    }
-
-    for entry in fs::read_dir(src)? {
-        let entry = entry?;
-        let path = entry.path();
-        let dest_path = dst.join(entry.file_name());
-
-        if path.is_dir() {
-            copy_dir_all(&path, &dest_path)?;
-        } else {
-            fs::copy(&path, &dest_path)?;
-        }
-    }
-
-    Ok(())
-}
-
-// endregion: DirTemplate
-
-// region: Methods
 
 pub fn add_template(name: &str, path: &str)
 {
@@ -100,24 +52,20 @@ pub fn add_template(name: &str, path: &str)
             return;
         }
     };
-    
-    if !template.validate() {
-        println!("Invalid template. Please, check the template.");
-        return;
-    }
-    
-    match template.save(name) { 
-        Ok(_) => println!("Template added. Name: {}", name),
-        Err(_) => println!("Error adding the template."),
-    }
+
+    template.save(name).expect("Should save the template.");
 }
 
-fn build_template(path: &str) -> Result<impl Template, TemplateError>
+fn build_template(path: &str) -> Result<Box<dyn Template>, TemplateError>
 {
+    if path.starts_with("https://") || path.starts_with("http://") {
+        return Ok(Box::new(GitTemplate::new(path)));
+    }
+
     let path = PathBuf::from(path);
 
     if path.is_dir() {
-        Ok(DirTemplate { dir: path })
+        Ok(Box::new(DirTemplate::new(path)))
     } else {
         Err(TemplateError::InvalidTemplate)
     }
@@ -125,54 +73,93 @@ fn build_template(path: &str) -> Result<impl Template, TemplateError>
 
 pub fn remove_template(name: &str)
 {
-    if let Some(template) = get_template(name) {
-        fs::remove_dir(template.path()).expect("Should remove the template");
+    let template_path = get_template_data_path(name);
+
+    if let None = template_path {
+        return;
+    }
+
+    let template_path = template_path.unwrap();
+
+    if let Ok(template_data) =
+        TemplateData::from_json(fs::read_to_string(&template_path).unwrap().as_str())
+    {
+        let template = template_data.to_template();
+        let template = template.as_ref();
+
+        template.remove();
+    } else {
+        fs::remove_file(template_path).expect("Should remove the template.");
+        println!("Template removed but data wasn't parseable. Any related files were not removed.");
     }
 }
 
-pub fn exists_template(name: &str) -> bool
+pub fn get_available_templates() -> Result<Vec<DirEntry>, io::Error>
 {
-    match get_template(name) {
-        Some(_) => true,
-        None => false,
-    }
-}
-
-pub fn get_available_templates() -> ReadDir
-{
-    fs::read_dir(SAVE_TEMPLATES_DIR.as_path()).expect("Should exists")
-}
-
-pub fn get_template(name: &str) -> Option<DirEntry>
-{
-    get_available_templates()
+    fs::read_dir(SAVE_TEMPLATES_DIR.as_path())
+        .expect("Should exists")
         .filter(|entry| {
-            let entry = entry.as_ref().expect("Should exists");
-            let entry_path = entry.path();
-            let entry_name = entry_path.file_name().expect("Should have a name");
+            let entry = entry.as_ref().expect("Should be a dir entry");
+            let path = entry.path();
+            let path = path.as_path();
 
-            entry_name.to_str().expect("Should be a string") == name
+            if !path.is_file() {
+                return false;
+            }
+
+            let data = fs::read_to_string(path)
+                .map_err(|_| io::Error::new(io::ErrorKind::Other, "Error reading the file."));
+            let data = data.expect("Should read the file.");
+
+            let template_data = TemplateData::from_json(data.as_str());
+
+            if let Err(_) = template_data {
+                return false;
+            }
+
+            return true;
         })
-        .collect::<Vec<Result<DirEntry, io::Error>>>()
-        .pop()
-        .and_then(|entry| entry.ok())
+        .collect()
 }
 
-pub fn generate_template(name: &str, output_name: &str) {
-    
-    if !exists_template(name) { 
+pub fn get_template_data_path(name: &str) -> Option<PathBuf>
+{
+    let path = PathBuf::from(SAVE_TEMPLATES_DIR.as_path().join(name));
+    if path.exists() {
+        Some(path)
+    } else {
+        None
+    }
+}
+
+pub fn get_template_data(name: &str) -> Option<TemplateData>
+{
+    let path = PathBuf::from(SAVE_TEMPLATES_DIR.as_path().join(name));
+
+    if let Ok(template_data) = TemplateData::from_json(fs::read_to_string(path).unwrap().as_str()) {
+        Some(template_data)
+    } else {
+        None
+    }
+}
+
+pub fn generate(name: &str, output_name: &str)
+{
+    let template_data = get_template_data(name);
+
+    if let None = template_data {
         println!("Template {} not found.", name);
         return;
     }
-    
-    let template_path = SAVE_TEMPLATES_DIR.as_path().join(name);
-    
-    let template = build_template(template_path.to_str().unwrap()).expect("Should build the template");
-    
-    match template.generate(output_name) {
+
+    match template_data.unwrap().to_template().generate(output_name) {
         Ok(_) => println!("Template generated."),
+        Err(TemplateError::ErrorExecutingGit) => println!("Error executing git. Check if it is installed."),
         Err(_) => println!("Error generating the template."),
     }
 }
 
-// endregion: Methods
+fn is_valid_name(name: &str) -> bool
+{
+    !name.contains("/") && !name.contains("\\")
+}
