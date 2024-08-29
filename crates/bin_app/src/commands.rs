@@ -4,61 +4,44 @@ mod remove;
 mod spawn;
 mod version;
 
-use crate::commands::Command::{Add, Remove, Spawn};
 use crate::commands::CommandBuildError::NotRecognisedCommand;
 use std::collections::HashMap;
-use std::str::FromStr;
-// region: Command Enum
+use crate::commands::add::Add;
+use crate::commands::list::List;
+use crate::commands::remove::Remove;
+use crate::commands::spawn::Spawn;
+use crate::commands::version::Version;
+// region: Command Trait
 
-pub enum Command
+pub trait Command
 {
-    Spawn(Vec<String>),
-    Add(Vec<String>),
-    Remove(Vec<String>),
-    List,
-    Version,
+    fn execute(flags: HashMap<String, String>);
+    fn show_usage();
 }
 
-impl FromStr for Command
+pub fn try_execute(s: &str) -> Result<(), CommandBuildError>
 {
-    type Err = CommandBuildError;
+    let mut parts = s.split_whitespace();
 
-    fn from_str(s: &str) -> Result<Self, Self::Err>
-    {
-        let mut parts = s.split_whitespace();
+    let main_command = match parts.next() {
+        Some(command) => command,
+        None => return Err(CommandBuildError::NotEnoughArgsIntroduced),
+    };
 
-        let main_command = match parts.next() {
-            Some(command) => command,
-            None => return Err(CommandBuildError::NotEnoughArgsIntroduced),
-        };
+    let command_instr = parts.map(String::from).collect::<Vec<String>>();
+    let flags = map_flags(&command_instr);
 
-        let command_instr = parts.map(String::from).collect::<Vec<String>>();
-
-        match main_command {
-            "spawn" => Ok(Spawn(command_instr)),
-            "add" => Ok(Add(command_instr)),
-            "rm" => Ok(Remove(command_instr)),
-            "list" => Ok(Command::List),
-            "version" => Ok(Command::Version),
-            _ => Err(NotRecognisedCommand),
-        }
+    match main_command {
+        "spawn" => Ok(Spawn::execute(flags)),
+        "add" => Ok(Add::execute(flags)),
+        "rm" => Ok(Remove::execute(flags)),
+        "list" => Ok(List::execute(flags)),
+        "version" => Ok(Version::execute(flags)),
+        _ => Err(NotRecognisedCommand),
     }
 }
 
-impl Command
-{
-    pub fn execute(&self)
-    {
-        match self {
-            Spawn(args) => spawn::execute(args),
-            Add(args) => add::execute(args),
-            Remove(args) => remove::execute(args),
-            Command::List => list::execute(),
-        }
-    }
-}
-
-// endregion: Command Enum
+// endregion: Command Trait
 
 // region: Command Build Error
 
@@ -115,7 +98,7 @@ mod tests
         assert_eq!(result.get("-p").unwrap(), "path");
         assert_eq!(result.get("-r").unwrap(), "");
         assert_eq!(result.get("-a").unwrap(), "");
-        
+
         let args = vec!["mkt", "remove", "-n", "crates"];
         let result = map_flags(&args.iter().map(|s| s.to_string()).collect());
 

@@ -25,6 +25,10 @@ fn main()
     let command = env::args().skip(1).collect::<Vec<String>>().join(" ");
     let command = command.as_str();
 
-    let command = Command::from_str(command).unwrap();
-    command.execute();
+    match commands::try_execute(command) { 
+        Ok(_) => (),
+        Err(err) => {
+            println!("Error: {:?}", err);
+        },
+    }
 }

@@ -1,26 +1,31 @@
-use crate::{commands, templates, BIN_NAME};
+use crate::commands::Command;
+use crate::{templates, BIN_NAME};
+use std::collections::HashMap;
 
-pub fn execute(s: &Vec<String>)
+pub struct Spawn;
+
+impl Command for Spawn
 {
-    let flags = commands::map_flags(s);
+    fn execute(flags: HashMap<String, String>)
+    {
+        let template_name = match flags.get("-n") {
+            Some(name) => name,
+            None => {
+                Self::show_usage();
+                return;
+            }
+        };
 
-    let template_name = match flags.get("-n") {
-        Some(name) => name,
-        None => {
-            print_command_usage();
-            return;
-        }
-    };
+        let template_output_name = flags.get("-o").unwrap_or_else(|| template_name);
 
-    let template_output_name = flags.get("-o").unwrap_or_else(|| template_name);
-    
-    templates::generate(template_name, template_output_name);
-}
+        templates::generate(template_name, template_output_name);
+    }
 
-fn print_command_usage()
-{
-    println!(
-        "USAGE: {} spawn -n <Template Name> [-o <Spawn name (Some templates can`t use it)>]",
-        BIN_NAME
-    );
+    fn show_usage()
+    {
+        println!(
+            "USAGE: {} spawn -n <Template Name> [-o <Spawn name (Some templates can`t use it)>]",
+            BIN_NAME
+        );
+    }
 }
