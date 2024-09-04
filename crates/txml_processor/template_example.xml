@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="txml_schema.xsd">
+    <Directory name="crates" in_command="git init">
+        <File name="Hola" extension="rs">fn main()
+{
+    println!("Hola, mundo!");
+}
+        </File>
+    </Directory>
+
+    <File name="Cargo" extension="toml">[workspace]
+resolver = "2"
+members = []
+    </File>
+    <File name="rustfmt" extension="toml"/>
+    <File name=".gitignore"/>
+</Root>
