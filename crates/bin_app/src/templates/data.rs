@@ -1,6 +1,6 @@
 use crate::templates::dir::DirTemplate;
 use crate::templates::git::GitTemplate;
-use crate::templates::{dir, git, Template};
+use crate::templates::{dir, git, txml, Template};
 use serde::{Deserialize, Serialize};
 use std::io;
 use std::path::PathBuf;
@@ -53,6 +53,7 @@ impl TemplateData
         match self.class.as_str() {
             dir::DIR_TEMPLATE => Box::new(DirTemplate::new(PathBuf::from(self.data_path.as_str()))),
             git::GIT_TEMPLATE => Box::new(GitTemplate::new(self.data_path.as_str())),
+            txml::TXML_TEMPLATE => Box::new(txml::TxmlTemplate::new(PathBuf::from(self.data_path.as_str()))),
             _ => panic!("Invalid template class."),
         }
     }

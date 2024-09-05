@@ -1,6 +1,7 @@
 mod data;
 mod dir;
 mod git;
+mod txml;
 
 use crate::templates::data::TemplateData;
 use crate::templates::dir::DirTemplate;
@@ -59,14 +60,20 @@ fn build_template(path: &str) -> Result<Box<dyn Template>, TemplateError>
     if path.ends_with(".git") {
         return Ok(Box::new(GitTemplate::new(path)));
     }
-
+    
     let path = PathBuf::from(path);
 
     if path.is_dir() {
-        Ok(Box::new(DirTemplate::new(path)))
-    } else {
-        Err(TemplateError::InvalidTemplate)
+        return Ok(Box::new(DirTemplate::new(path)))
+    } 
+    
+    if path.is_file() {
+        let local_txml_template = txml::TxmlTemplate::new(path);
+        
+        if local_txml_template.validate() { return Ok(Box::new(local_txml_template)); }
     }
+
+    Err(TemplateError::InvalidTemplate)
 }
 
 pub fn remove_template(name: &str)

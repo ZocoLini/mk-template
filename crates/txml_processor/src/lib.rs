@@ -1,4 +1,4 @@
-mod objects;
+pub mod objects;
 
 use crate::objects::{AttributeHandler, Directory, File, TxmlStructure};
 use crate::TxmlProcessorError::{InvalidDirectory, InvalidTag, UnknownParseError};
@@ -152,7 +152,7 @@ mod tests
     fn process_txml_test()
     {
         let biding = &PathBuf::from_str(
-            "/home/borja/projects/mk-template/crates/txml_processor/template_example.xml",
+            "/home/borja/projects/mk-template/crates/txml_processor/template_example_1.xml",
         )
         .expect("Should exist");
         let txml = process_txml(biding).expect("TODO: panic message");

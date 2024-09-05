@@ -1,8 +1,6 @@
-use crate::commands::Command;
 use std::cell::LazyCell;
 use std::env;
 use std::path::PathBuf;
-use std::str::FromStr;
 
 mod commands;
 mod config;
