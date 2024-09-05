@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
 <Root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:noNamespaceSchemaLocation="txml_schema.xsd">
-    <Directory name="crates" in_command="git init">
+      xsi:noNamespaceSchemaLocation="https://lebastudios.org/xml-schemas/txml_schema.xsd">
+    <Directory name="crates" in_command="git init; mkdir pepe">
         <File name="Hola" extension="rs">fn main()
 {
     println!("Hola, mundo!");
 }
         </File>
+        <Directory name="Pwpw">
+            <File name="sin_titulo" extension="txt">
+                Hola me llamo Juan
+                Pepe</File>
+        </Directory>
     </Directory>
 
     <File name="Cargo" extension="toml">[workspace]

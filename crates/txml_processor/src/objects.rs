@@ -90,7 +90,7 @@ impl Instantiable for Directory
             .expect("Error creating directory");
 
         if !self.in_command.is_empty() {
-            let command_execution = execute_command(&self.in_command, &new_path_buff);
+            let command_execution = execute_commands(&self.in_command, &new_path_buff);
 
             match command_execution {
                 Err(e) => println!("File {} created but the command failed: {e:?}", dir_name),
@@ -99,7 +99,7 @@ impl Instantiable for Directory
         }
 
         if !self.out_command.is_empty() {
-            let command_execution = execute_command(&self.out_command, dir);
+            let command_execution = execute_commands(&self.out_command, dir);
 
             match command_execution {
                 Err(e) => println!("File {} created but the command failed: {e:?}", dir_name),
@@ -107,11 +107,11 @@ impl Instantiable for Directory
             }
         }
 
-        self.files.iter().for_each(|file| file.instantiate(&dir));
+        self.files.iter().for_each(|file| file.instantiate(&new_path_buff));
 
         self.directories
             .iter()
-            .for_each(|directory| directory.instantiate(dir));
+            .for_each(|directory| directory.instantiate(&new_path_buff));
     }
 }
 
@@ -189,7 +189,7 @@ impl Instantiable for File
             .expect("Error writing to file");
 
         if !self.command.is_empty() {
-            let command_execution = execute_command(&self.command, dir);
+            let command_execution = execute_commands(&self.command, dir);
 
             match command_execution {
                 Err(e) => println!("File {} created but the command failed: {e:?}", file_name),
@@ -268,7 +268,20 @@ impl Instantiable for TxmlStructure
 
 // region: Utils
 
-fn execute_command(command: &String, dir: &PathBuf) -> Result<(), CommandError>
+fn execute_commands(command: &str, dir: &PathBuf) -> Result<(), CommandError>
+{
+    let commands: Vec<&str> = command.split("; ").collect();
+
+    for &command in commands.iter() {
+        if let Err(e) = execute_command(command, dir) {
+            return Err(e);
+        }
+    }
+    
+    Ok(())
+}
+
+fn execute_command(command: &str, dir: &PathBuf)-> Result<(), CommandError>
 {
     let command_parts: Vec<&str> = command.split_whitespace().collect();
 

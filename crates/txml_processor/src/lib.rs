@@ -29,7 +29,7 @@ pub fn process_txml(txml: &PathBuf) -> Result<TxmlStructure, TxmlProcessorError>
     let mut reader = Reader::from_file(txml).expect("Should exist");
     let mut event_buf = Vec::new();
 
-    let mut dir_queue: VecDeque<&mut Directory> = VecDeque::new();
+    let mut dir_queue: VecDeque<Directory> = VecDeque::new();
     let mut current_file: Option<File> = None;
 
     loop {
@@ -37,22 +37,13 @@ pub fn process_txml(txml: &PathBuf) -> Result<TxmlStructure, TxmlProcessorError>
             Ok(Event::Start(ref e)) => match e.name().0 {
                 b"Root" => continue,
                 b"Directory" => {
-                    // TODO: Make it save inner Files
-
                     let mut directory = Directory::new();
 
                     e.attributes().for_each(|attr| {
                         directory.process_attribute(attr.expect("Error reading attribute"));
                     });
 
-                    if dir_queue.is_empty() {
-                        txml_structure.add_directory(directory)
-                    } else {
-                        dir_queue
-                            .back_mut()
-                            .expect("Shouldn't be empty")
-                            .add_directory(directory)
-                    }
+                    dir_queue.push_back(directory);
                 }
                 b"File" => {
                     current_file = Some(File::new());
@@ -73,7 +64,7 @@ pub fn process_txml(txml: &PathBuf) -> Result<TxmlStructure, TxmlProcessorError>
                     e.attributes().for_each(|attr| {
                         directory.process_attribute(attr.expect("Error reading attribute"));
                     });
-
+                    
                     if dir_queue.is_empty() {
                         txml_structure.add_directory(directory)
                     } else {
@@ -108,25 +99,35 @@ pub fn process_txml(txml: &PathBuf) -> Result<TxmlStructure, TxmlProcessorError>
                     }
 
                     file.set_text(content);
-
-                    if dir_queue.is_empty() {
-                        txml_structure.add_file(current_file.unwrap())
-                    } else {
-                        dir_queue
-                            .back_mut()
-                            .expect("Shouldn't be empty")
-                            .add_file(current_file.unwrap())
-                    }
-
-                    current_file = None;
                 }
             }
             Ok(Event::End(ref e)) => match e.name().0 {
                 b"Root" => break,
                 b"Directory" => {
-                    dir_queue.pop_back();
+                    if dir_queue.len() == 1 {
+                        txml_structure.add_directory(dir_queue.pop_back().unwrap())
+                    } else {
+                        let directory = dir_queue.pop_back().unwrap();
+                        dir_queue
+                            .back_mut()
+                            .expect("Shouldn't be empty")
+                            .add_directory(directory);
+                    }
                 }
-                b"File" => current_file = None,
+                b"File" => {
+                    let file = current_file.take().expect("Shouldn't be empty");
+
+                    if dir_queue.is_empty() {
+                        txml_structure.add_file(file)
+                    } else {
+                        dir_queue
+                            .back_mut()
+                            .expect("Shouldn't be empty")
+                            .add_file(file)
+                    }
+                    
+                    current_file = None;
+                }
                 _ => return Err(InvalidTag),
             },
             Ok(Event::Eof) => break,
