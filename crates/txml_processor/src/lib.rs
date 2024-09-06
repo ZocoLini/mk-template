@@ -152,7 +152,7 @@ mod tests
     {
         if let Err(e) = process_txml(
             &PathBuf::from_str(
-                "/home/borja/projects/mk-template/crates/txml_processor/template_example_1.xml",
+                "/home/borja/projects/mk-template/tests/resources/template_example_1.xml",
             )
             .expect("Should exist"),
         ) {

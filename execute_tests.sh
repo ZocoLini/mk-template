@@ -29,6 +29,7 @@ if [ ! -d "$TEST_DIR" ]; then
 fi
 
 # cargo test
+cargo test
 
 cargo build -p bin_app
 cp target/debug/bin_app tests/mkt_dev
