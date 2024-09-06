@@ -7,6 +7,7 @@ TEST_DIR="tests/";
 DIR_TEMPLATE_TEST="test_dir_template.sh";
 GIT_TEMPLATE_TEST="test_git_template.sh";
 TXML_TEMPLATE_TEST="test_txml_template.sh";
+BINARY_APP="mkt_dev";
 RESOURCES_DIR="resources";
 
 reset_app_dir()
@@ -17,6 +18,7 @@ reset_app_dir()
     if [[ "$archivo" == "./$DIR_TEMPLATE_TEST" || \
           "$archivo" == "./$GIT_TEMPLATE_TEST" || \
           "$archivo" == "./$TXML_TEMPLATE_TEST" || \
+          "$archivo" == "./$BINARY_APP" || \
           "$archivo" == "./$RESOURCES_DIR" ]]; then
         continue # Don't remove files needed for testing
     fi
@@ -34,7 +36,7 @@ fi
 cargo test
 
 cargo build -p bin_app
-cp target/debug/bin_app tests/mkt_dev
+cp "target/debug/bin_app" "tests/$BINARY_APP"
 
 cd tests || exit
 
@@ -67,3 +69,5 @@ else
 fi
 
 reset_app_dir;
+
+rm "$BINARY_APP"
