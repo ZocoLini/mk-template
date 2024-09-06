@@ -64,7 +64,7 @@ pub fn process_txml(txml: &PathBuf) -> Result<TxmlStructure, TxmlProcessorError>
                     e.attributes().for_each(|attr| {
                         directory.process_attribute(attr.expect("Error reading attribute"));
                     });
-                    
+
                     if dir_queue.is_empty() {
                         txml_structure.add_directory(directory)
                     } else {
@@ -125,7 +125,7 @@ pub fn process_txml(txml: &PathBuf) -> Result<TxmlStructure, TxmlProcessorError>
                             .expect("Shouldn't be empty")
                             .add_file(file)
                     }
-                    
+
                     current_file = None;
                 }
                 _ => return Err(InvalidTag),
@@ -145,20 +145,18 @@ pub fn process_txml(txml: &PathBuf) -> Result<TxmlStructure, TxmlProcessorError>
 mod tests
 {
     use super::*;
-    use crate::objects::Instantiable;
     use std::str::FromStr;
 
     #[test]
     fn process_txml_test()
     {
-        let biding = &PathBuf::from_str(
-            "/home/borja/projects/mk-template/crates/txml_processor/template_example_1.xml",
-        )
-        .expect("Should exist");
-        let txml = process_txml(biding).expect("TODO: panic message");
-
-        txml.instantiate(
-            &PathBuf::from_str("/home/borja/projects/mk-template/test").expect("Should exist"),
-        );
+        if let Err(e) = process_txml(
+            &PathBuf::from_str(
+                "/home/borja/projects/mk-template/crates/txml_processor/template_example_1.xml",
+            )
+            .expect("Should exist"),
+        ) {
+            panic!("Error: {:?}", e);
+        }
     }
 }

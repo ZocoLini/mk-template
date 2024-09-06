@@ -6,7 +6,18 @@ mod commands;
 mod config;
 mod templates;
 
-const BIN_NAME: &str = "mkt";
+const BIN_NAME: &str = {
+    #[cfg(debug_assertions)]
+    {
+        "mkt-dev"
+    }
+
+    #[cfg(not(debug_assertions))]
+    {
+        "mkt"
+    }
+};
+
 const CONFIG_DIR: LazyCell<PathBuf> = LazyCell::new(|| {
     let path = PathBuf::from(env::var("HOME").expect("Should have a HOME var.") + "/." + BIN_NAME);
     

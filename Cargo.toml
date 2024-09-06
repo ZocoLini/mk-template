@@ -1,3 +1,16 @@
 [workspace]
 resolver = "2"
 members = ["crates/bin_app", "crates/txml_processor"]
+
+
+[profile.dev]
+opt-level = 1            # Alguna optimización, pero rápida para pruebas
+debug = true             # Incluir símbolos de depuración para pruebas
+overflow-checks = true   # Mantener la verificación de desbordamiento
+
+[profile.release]
+opt-level = 3            # Mayor nivel de optimización (0-3, 3: optimización completa)
+debug = false            # No incluir símbolos de depuración en la versión release
+lto = true               # Activar la optimización Link Time Optimization (LTO)
+codegen-units = 1        # Optimización adicional que hace que el código sea más rápido pero con mayor tiempo de compilación
+panic = 'abort'          # Cambiar el comportamiento en pánicos (abort más eficiente que unwind)

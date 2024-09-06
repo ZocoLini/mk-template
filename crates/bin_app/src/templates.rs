@@ -157,9 +157,9 @@ pub fn generate(name: &str, output_name: &str)
     }
 
     match template_data.unwrap().to_template().generate(output_name) {
-        Ok(_) => println!("Template generated."),
         Err(TemplateError::ErrorExecutingGit) => println!("Error executing git. Check if it is installed."),
         Err(_) => println!("Error generating the template."),
+        _ => ()
     }
 }
 
