@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source tests/resources/utils.sh
+
 TEMPLATES_DIR="$HOME/.mkt-dev";
 TEST_DIR="tests/";
 DIR_TEMPLATE_TEST="test_dir_template.sh";
@@ -39,9 +41,9 @@ cd tests || exit
 ### Execute Dir Template test
 
 if ! bash "$DIR_TEMPLATE_TEST"; then
-  echo "=> FAILED: Directory templates didn't pass the tests"
+  echo -e "=> ${FAILED}: Directory templates didn't pass the tests"
 else
-  echo "=> SUCCESS: Directory templates passed the tests"
+  echo -e "=> ${SUCCESS}: Directory templates passed the tests"
 fi
 
 reset_app_dir;
@@ -49,19 +51,19 @@ reset_app_dir;
 ### Execute Git Template test
 
 if ! bash "$GIT_TEMPLATE_TEST"; then
-  echo "=> FAILED: Git templates didn't pass the tests"
+  echo -e "=> ${FAILED}: Git templates didn't pass the tests"
 else
-  echo "=> SUCCESS: Git templates passed the tests"
+  echo -e "=> ${SUCCESS}: Git templates passed the tests"
 fi
 
 reset_app_dir;
 
-### Execute Txml Template test
+### Execute TXML Template test
 
 if ! bash "$TXML_TEMPLATE_TEST"; then
-  echo "=> FAILED: Txml templates didn't pass the tests"
+  echo -e "=> ${FAILED}: TXML templates didn't pass the tests"
 else
-  echo "=> SUCCESS: Txml templates passed the tests"
+  echo -e "=> ${SUCCESS}: TXML templates passed the tests"
 fi
 
 reset_app_dir;
