@@ -23,7 +23,7 @@ reset_app_dir()
         continue # Don't remove files needed for testing
     fi
 
-    rm -r "$archivo";
+    rm -rf "$archivo";
   done
 }
 

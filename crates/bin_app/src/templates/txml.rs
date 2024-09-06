@@ -6,23 +6,18 @@ use txml_processor::objects::Instantiable;
 
 pub const TXML_TEMPLATE: &str = "txml";
 
-pub struct TxmlTemplate
-{
+pub struct TxmlTemplate {
     txml_file: PathBuf,
 }
 
-impl TxmlTemplate
-{
-    pub fn new(txml_file: PathBuf) -> Self
-    {
+impl TxmlTemplate {
+    pub fn new(txml_file: PathBuf) -> Self {
         Self { txml_file }
     }
 }
 
-impl Template for TxmlTemplate
-{
-    fn generate(&self, _name: &str) -> Result<(), TemplateError>
-    {
+impl Template for TxmlTemplate {
+    fn generate(&self, name: &str) -> Result<(), TemplateError> {
         let txml_structure = match txml_processor::process_txml(&self.txml_file) {
             Ok(txml) => txml,
             Err(e) => {
@@ -31,15 +26,19 @@ impl Template for TxmlTemplate
             }
         };
 
-        txml_structure.instantiate(&env::current_dir().expect("Should exist a current dir."));
+        txml_structure.instantiate_with_name(
+            &env::current_dir().expect("Should exist a current dir."),
+            name,
+        );
 
         Ok(())
     }
 
-    fn save(&self, name: &str) -> Result<(), TemplateError>
-    {
+    fn save(&self, name: &str) -> Result<(), TemplateError> {
         let src = self.txml_file.as_path();
-        let dst = SAVE_TEMPLATES_DIR.as_path().join(name.to_string() + ".txml");
+        let dst = SAVE_TEMPLATES_DIR
+            .as_path()
+            .join(name.to_string() + ".txml");
         let dst = dst.as_path();
 
         let result = fs::copy(src, dst).map_err(|_e| TemplateError::IoError);
@@ -56,15 +55,13 @@ impl Template for TxmlTemplate
             })
     }
 
-    fn remove(&self)
-    {
+    fn remove(&self) {
         if let Err(e) = fs::remove_file(&self.txml_file) {
             println!("The TXML Template couldn't be deleted: {e:?}")
         }
     }
 
-    fn validate(&self) -> bool
-    {
+    fn validate(&self) -> bool {
         txml_processor::process_txml(&self.txml_file).is_ok()
     }
 }
