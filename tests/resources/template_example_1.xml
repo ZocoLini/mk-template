@@ -8,7 +8,7 @@
     println!("Hola, mundo!");
 }
         </File>
-        <Directory name="Pwpw">
+        <Directory name="crate">
             <File name="sin_titulo" extension="txt">
                 Hola me llamo Juan
                 Pepe</File>

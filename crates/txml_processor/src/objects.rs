@@ -34,6 +34,8 @@ pub trait AttributeHandler
 pub trait Instantiable
 {
     fn instantiate(&self, dir: &PathBuf);
+
+    fn instantiate_with_name(&self, dir: &PathBuf, _name: &str);
 }
 
 // endregion: Generics
@@ -77,7 +79,12 @@ impl Instantiable for Directory
 {
     fn instantiate(&self, dir: &PathBuf)
     {
-        let dir_name = format!("{}", self.name);
+        self.instantiate_with_name(dir, self.name.as_str());
+    }
+
+    fn instantiate_with_name(&self, dir: &PathBuf, name: &str) 
+    {
+        let dir_name = format!("{}", name);
         let new_path_buff = dir.join(&dir_name);
 
         if new_path_buff.exists() {
@@ -171,10 +178,14 @@ impl Instantiable for File
 {
     fn instantiate(&self, dir: &PathBuf)
     {
+        self.instantiate_with_name(dir, self.name.as_str());
+    }
+
+    fn instantiate_with_name(&self, dir: &PathBuf, name: &str) {
         let file_name = if self.extension.is_empty() {
-            format!("{}", self.name)
+            format!("{}", name)
         } else {
-            format!("{}.{}", self.name, self.extension)
+            format!("{}.{}", name, self.extension)
         };
         let new_path_buff = dir.join(&file_name);
 
@@ -183,6 +194,8 @@ impl Instantiable for File
             return;
         }
 
+        // TODO: Modify this to fix the indentation problem
+        // TODO: Modify to be able to write: &lt; as <, &gt; as >, &amp; as &, &quot; as ", and &apos; as '
         fs::File::create(&new_path_buff)
             .expect("Error creating file")
             .write_all(self.content.as_bytes())
@@ -261,6 +274,20 @@ impl Instantiable for TxmlStructure
         self.directories
             .iter()
             .for_each(|directory| directory.instantiate(dir));
+    }
+
+    fn instantiate_with_name(&self, dir: &PathBuf, name: &str) {
+        if self.files.len() + self.directories.len() > 1 { self.instantiate(dir); return; }
+
+        if self.files.len() == 1 {
+            self.files[0].instantiate_with_name(dir, name);
+            return;
+        }
+
+        if self.directories.len() == 1 {
+            self.directories[0].instantiate_with_name(dir, name);
+            return;
+        }
     }
 }
 
