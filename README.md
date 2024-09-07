@@ -228,6 +228,24 @@ The schema is available at [lebastudios.org](https://lebastudios.org/xml-schemas
 
 ## Contributing
 
+Contributions are welcome! If you'd like to contribute to this project, please follow these steps:
+
+1. Fork the repository.
+2. Create a new branch (`git checkout -b feature-branch`).
+3. Make your changes and commit them (`git commit -m 'Add new feature'`).
+4. Push to the branch (`git push origin feature-branch`).
+5. Open a pull request.
+
+Please make sure your code adheres to the following guidelines:
+- Write clear and concise commit messages.
+- Ensure that your code follows the project's style guidelines.
+- Add comments where necessary for clarity.
+- Test your changes to ensure they don't break existing functionality.
+
+If you find a bug or have a feature request, feel free to open an issue.
+
+Thank you for your contributions!
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](./LICENSE) 
