@@ -57,9 +57,9 @@ $ mkt [COMMAND] [OPTIONS]
 ```
 
 ### Available commands:
-**mkt** [**add** **-p** \<Path to the template you want to add> [**-n** \<Custom name for the template>],<br>
+**mkt** [**add** **-p** \<Path to the template you want to add> [**-n** \<Custom name for the template>]],<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[**list**],<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[**rm** **-n** \<Name of the template you want to remove>],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[**rm** **-n** \<Name of the template you want to remove>]],<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[**spawn** **-n** \<Name of the template you want to spawn> [**-o** \<Define an output name>]],<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[**help**],<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[**version**]<br>
@@ -104,7 +104,7 @@ $ mkt rm -n my-crates # Remove the my-crates template
 ```
 ### XSD Schema
 
-The schema is available at: [TXML Schema](https://lebastudios.org/xml-schemas/txml_schema.xsd)
+The schema is available at [lebastudios.org](https://lebastudios.org/xml-schemas/txml_schema.xsd)
 
 ### Elements
 <ul>
@@ -142,7 +142,7 @@ The schema is available at: [TXML Schema](https://lebastudios.org/xml-schemas/tx
 
 ### Examples
 
-**One file with content (-n will rename the file preserving the extension)**
+**One file with content (-o will rename the file preserving the extension)**
 
 ```xml
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -158,7 +158,7 @@ The schema is available at: [TXML Schema](https://lebastudios.org/xml-schemas/tx
 </Root>
 ```
 
-**One directory with content (-n will rename the directory rust-project)**
+**One directory with content (-o will rename the directory rust-project)**
 
 ```xml
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -179,7 +179,8 @@ The schema is available at: [TXML Schema](https://lebastudios.org/xml-schemas/tx
 </Root>
 ```
 
-**Multiple files and directories at Root level**
+**Multiple files and directories at Root level (-o won't work because it's impossible to determine 
+   what element should be renamed)**
     
 ```xml 
 <?xml version="1.0" encoding="UTF-8" ?>
