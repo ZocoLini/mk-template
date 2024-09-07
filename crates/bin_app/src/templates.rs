@@ -8,6 +8,7 @@ use crate::templates::dir::DirTemplate;
 use crate::templates::git::GitTemplate;
 use crate::CONFIG_DIR;
 use std::cell::LazyCell;
+use std::fmt::{Debug, Formatter};
 use std::fs;
 use std::fs::DirEntry;
 use std::io;
@@ -31,12 +32,23 @@ pub trait Template
     fn validate(&self) -> bool;
 }
 
-#[derive(Debug)]
 pub enum TemplateError
 {
     IoError,
     InvalidTemplate,
     ErrorExecutingGit,
+    InvalidPath,
+}
+
+impl Debug for TemplateError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TemplateError::IoError => write!(f, "IO Error"),
+            TemplateError::InvalidTemplate => write!(f, "Invalid Template"),
+            TemplateError::ErrorExecutingGit => write!(f, "Error executing git. Check if it is installed."),
+            TemplateError::InvalidPath => write!(f, "Invalid path."),
+        }
+    }
 }
 
 pub fn add_template(name: &str, path: &str)
@@ -46,8 +58,8 @@ pub fn add_template(name: &str, path: &str)
     let template = build_template(path);
     let template = match template {
         Ok(template) => template,
-        Err(_) => {
-            println!("Not supported template.");
+        Err(e) => {
+            println!("Error adding the template: {:?}", e);
             return;
         }
     };
@@ -62,6 +74,8 @@ fn build_template(path: &str) -> Result<Box<dyn Template>, TemplateError>
     }
     
     let path = PathBuf::from(path);
+
+    if !path.exists() { return Err(TemplateError::InvalidPath) }
 
     if path.is_dir() {
         return Ok(Box::new(DirTemplate::new(path)))
