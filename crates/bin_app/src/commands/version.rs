@@ -7,7 +7,7 @@ impl Command for Version
 {
     fn execute(_flags: HashMap<String, String>)
     {
-        println!("Version: 0.2.0");
+        println!("Version: {}", env!("CARGO_PKG_VERSION"));
     }
 
     fn show_usage() {}

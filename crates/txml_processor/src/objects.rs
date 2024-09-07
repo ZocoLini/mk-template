@@ -194,11 +194,12 @@ impl Instantiable for File
             return;
         }
 
-        // TODO: Modify this to fix the indentation problem
-        // TODO: Modify to be able to write: &lt; as <, &gt; as >, &amp; as &, &quot; as ", and &apos; as '
+        let content = remove_indentation(&self.content);
+        let content = escape_xml(&content);
+
         fs::File::create(&new_path_buff)
             .expect("Error creating file")
-            .write_all(self.content.as_bytes())
+            .write_all(content.as_bytes())
             .expect("Error writing to file");
 
         if !self.command.is_empty() {
@@ -210,6 +211,76 @@ impl Instantiable for File
             }
         }
     }
+}
+
+fn escape_xml(text: &str) -> String
+{
+    text.replace("&amp;", "&")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&quot;", "\"")
+        .replace("&apos;", "'")
+}
+
+fn remove_indentation(text: &str) -> String
+{
+    let mut result = String::new();
+
+    if is_blank(text) { return result; }
+
+    let text_lines: Vec<&str> = text.lines().skip(1).collect();
+
+    if text_lines.len() == 1 { return text.trim_start().to_string(); }
+
+    let indentation = get_indentation(&text_lines);
+
+    // Removing the spaces from the beginning of each line
+    for line in text.lines().skip(1) {
+
+        if is_blank(line) {
+            result.push_str("\n");
+            continue;
+        }
+
+        result.push_str(&line[indentation..]);
+        result.push_str("\n");
+    }
+
+    result.pop();
+    result
+}
+
+fn count_spaces(text: &str) -> usize
+{
+    let mut count = 0;
+    for c in text.chars() {
+        if c.is_whitespace() {
+            count += 1;
+        } else {
+            break;
+        }
+    }
+    count
+}
+
+fn get_indentation(text_lines: &Vec<&str>) -> usize
+{
+    let mut indentation = usize::MAX;
+    for line in text_lines.iter() {
+
+        if is_blank(line) { continue; }
+
+        let line_indentation = count_spaces(*line);
+        if line_indentation < indentation {
+            indentation = line_indentation;
+        }
+    }
+    indentation
+}
+
+fn is_blank(text: &str) -> bool
+{
+    text.chars().all(char::is_whitespace)
 }
 
 impl AttributeHandler for File
@@ -297,10 +368,10 @@ impl Instantiable for TxmlStructure
 
 fn execute_commands(command: &str, dir: &PathBuf) -> Result<(), CommandError>
 {
-    let commands: Vec<&str> = command.split("; ").collect();
+    let commands: Vec<&str> = command.split(";").collect();
 
     for &command in commands.iter() {
-        if let Err(e) = execute_command(command, dir) {
+        if let Err(e) = execute_command(command.trim(), dir) {
             return Err(e);
         }
     }
