@@ -229,3 +229,7 @@ The schema is available at [lebastudios.org](https://lebastudios.org/xml-schemas
 ## Contributing
 
 ## License
+
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) 
+file for details.
+
