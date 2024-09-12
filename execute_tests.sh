@@ -14,8 +14,9 @@ reset_app_dir()
 {
   rm -rf "$TEMPLATES_DIR";
 
-  for archivo in ./*; do
-    if [[ "$archivo" == "./$DIR_TEMPLATE_TEST" || \
+  for archivo in ./* ./.*; do
+    if [[ "$archivo" == "./." || "$archivo" == "./.." || \
+          "$archivo" == "./$DIR_TEMPLATE_TEST" || \
           "$archivo" == "./$GIT_TEMPLATE_TEST" || \
           "$archivo" == "./$TXML_TEMPLATE_TEST" || \
           "$archivo" == "./$BINARY_APP" || \

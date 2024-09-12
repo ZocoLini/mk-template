@@ -5,10 +5,12 @@ source resources/utils.sh
 TXML_0="resources/template_example_0.xml"
 TXML_1="resources/template_example_1.xml"
 TXML_2="resources/template_example_2.xml"
+TXML_3="resources/template_example_3.xml"
 
 TXML_0_NAME="template_example_0"
 TXML_1_NAME="template_example_1"
 TXML_2_NAME="template_example_2"
+TXML_3_NAME="template_example_3"
 
 ### Testing add command
 
@@ -21,10 +23,20 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+if [ ! -f "$TEMPLATES_DIR/$TXML_0_NAME" ]; then
+  echo -e "${FAILED}: TXML Template add command with out name didn't create the template data"
+  exit 1
+fi
+
 $APP_BINARY add -p "$TXML_1"
 
 if [ $? -ne 0 ]; then
   echo -e "${FAILED}: TXML Template add command with out name failed with example 1"
+  exit 1
+fi
+
+if [ ! -f "$TEMPLATES_DIR/$TXML_1_NAME" ]; then
+  echo -e "${FAILED}: TXML Template add command with out name didn't create the template data"
   exit 1
 fi
 
@@ -35,8 +47,20 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-if [ ! -f "$TEMPLATES_DIR/$TXML_1_NAME" ]; then
+if [ ! -f "$TEMPLATES_DIR/$TXML_2_NAME" ]; then
   echo -e "${FAILED}: TXML Template add command with out name didn't create the template data"
+  exit 1
+fi
+
+$APP_BINARY add -p "$TXML_3"
+
+if [ $? -ne 0 ]; then
+  echo -e "${FAILED}: TXML Template add command with out name failed with example 2"
+  exit 1
+fi
+
+if [ -f "$TEMPLATES_DIR/$TXML_3_NAME" ]; then
+  echo -e "${FAILED}: TXML Template add command with out name created the template data with an invalid txml file content"
   exit 1
 fi
 
