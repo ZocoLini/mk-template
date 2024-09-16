@@ -1,11 +1,5 @@
 pub mod objects;
-
-#[derive(Debug)]
-pub enum TxmlProcessorError {
-    InvalidDirectory,
-    UnknownParseError,
-    InvalidTag,
-}
+mod commands;
 
 #[cfg(test)]
 mod tests {

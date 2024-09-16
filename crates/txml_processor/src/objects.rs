@@ -1,37 +1,15 @@
 use std::collections::VecDeque;
-use crate::objects::CommandError::{CommandFailed, CreationError, InvalidInput};
 use quick_xml::events::attributes::Attribute;
-use std::fmt::{Debug, Formatter};
+use std::fmt::Debug;
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
-use std::process::Command;
 use std::str::FromStr;
 use quick_xml::events::Event;
 use quick_xml::Reader;
-use crate::{TxmlProcessorError};
-use crate::TxmlProcessorError::{InvalidDirectory, InvalidTag, UnknownParseError};
+use crate::commands;
 
 // region: Generics
-
-pub enum CommandError
-{
-    CommandFailed,
-    InvalidInput,
-    CreationError,
-}
-
-impl Debug for CommandError
-{
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result
-    {
-        match self {
-            CommandFailed => write!(f, "Command execution failed."),
-            InvalidInput => write!(f, "Command input was invalid."),
-            CreationError => write!(f, "Command creation failed."),
-        }
-    }
-}
 
 pub trait AttributeHandler
 {
@@ -104,7 +82,7 @@ impl Instantiable for Directory
             .expect("Error creating directory");
 
         if !self.in_command.is_empty() {
-            let command_execution = execute_commands(&self.in_command, &new_path_buff);
+            let command_execution = commands::execute_commands(&self.in_command, &new_path_buff);
 
             match command_execution {
                 Err(e) => println!("File {} created but the command failed: {e:?}", dir_name),
@@ -113,7 +91,7 @@ impl Instantiable for Directory
         }
 
         if !self.out_command.is_empty() {
-            let command_execution = execute_commands(&self.out_command, dir);
+            let command_execution = commands::execute_commands(&self.out_command, dir);
 
             match command_execution {
                 Err(e) => println!("File {} created but the command failed: {e:?}", dir_name),
@@ -210,7 +188,7 @@ impl Instantiable for File
             .expect("Error writing to file");
 
         if !self.command.is_empty() {
-            let command_execution = execute_commands(&self.command, dir);
+            let command_execution = commands::execute_commands(&self.command, dir);
 
             match command_execution {
                 Err(e) => println!("File {} created but the command failed: {e:?}", file_name),
@@ -316,6 +294,13 @@ impl AttributeHandler for File
 
 // region: TxmlStructure
 
+#[derive(Debug)]
+pub enum TxmlProcessorError {
+    InvalidDirectory,
+    UnknownParseError,
+    InvalidTag,
+}
+
 pub struct TxmlStructure
 {
     files: Vec<File>,
@@ -334,10 +319,10 @@ impl TxmlStructure
 
     pub fn from_file(txml: &PathBuf) -> Result<TxmlStructure, TxmlProcessorError> {
         if !txml.exists() {
-            return Err(InvalidDirectory);
+            return Err(TxmlProcessorError::InvalidDirectory);
         }
         if !txml.is_file() {
-            return Err(InvalidDirectory);
+            return Err(TxmlProcessorError::InvalidDirectory);
         }
 
         let txml_content = fs::read_to_string(txml).expect("Error reading file");
@@ -392,7 +377,7 @@ impl FromStr for TxmlStructure
                                 .process_attribute(attr.expect("Error reading attribute"));
                         });
                     }
-                    _ => return Err(InvalidTag),
+                    _ => return Err(TxmlProcessorError::InvalidTag),
                 },
                 Ok(Event::Empty(e)) => match e.name().0 {
                     b"Root" => continue,
@@ -426,7 +411,7 @@ impl FromStr for TxmlStructure
                                 .add_file(file)
                         }
                     }
-                    _ => return Err(InvalidTag),
+                    _ => return Err(TxmlProcessorError::InvalidTag),
                 },
                 Ok(Event::Text(e)) => {
                     if let Some(ref mut file) = current_file {
@@ -465,10 +450,10 @@ impl FromStr for TxmlStructure
 
                         current_file = None;
                     }
-                    _ => return Err(InvalidTag),
+                    _ => return Err(TxmlProcessorError::InvalidTag),
                 },
                 Ok(Event::Eof) => break,
-                Err(_e) => return Err(UnknownParseError),
+                Err(_e) => return Err(TxmlProcessorError::UnknownParseError),
                 _ => (),
             }
 
@@ -506,45 +491,3 @@ impl Instantiable for TxmlStructure
 }
 
 // endregion: FxmlStructure
-
-// region: Utils
-
-fn execute_commands(command: &str, dir: &PathBuf) -> Result<(), CommandError>
-{
-    let commands: Vec<&str> = command.split(";").collect();
-
-    for &command in commands.iter() {
-        if let Err(e) = execute_command(command.trim(), dir) {
-            return Err(e);
-        }
-    }
-    
-    Ok(())
-}
-
-fn execute_command(command: &str, dir: &PathBuf)-> Result<(), CommandError>
-{
-    let command_parts: Vec<&str> = command.split_whitespace().collect();
-
-    if command_parts.is_empty() {
-        return Err(InvalidInput);
-    }
-
-    let cmd = command_parts[0];
-    let args = &command_parts[1..];
-
-    let status = Command::new(cmd).current_dir(dir).args(args).status();
-
-    let status = match status {
-        Ok(s) => s,
-        Err(_) => return Err(CreationError),
-    };
-
-    if status.success() {
-        Ok(())
-    } else {
-        Err(CommandFailed)
-    }
-}
-
-// endregion: Utils
