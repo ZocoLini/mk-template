@@ -2,5 +2,5 @@
 
 <Root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="https://lebastudios.org/xml-schemas/txml_schema.xsd">
-    <Direct name="directory"/>
+    <Di name="directory"/>
 </Root>
