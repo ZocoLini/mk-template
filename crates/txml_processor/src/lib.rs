@@ -1,58 +1,25 @@
-pub mod objects;
+use quick_xml::events::attributes::Attribute;
+use std::path::PathBuf;
+use std::io;
+
+pub mod fs_elements;
+pub mod txml_structure;
 mod commands;
 
-#[cfg(test)]
-mod tests {
-    use crate::objects::TxmlStructure;
-    use std::path::PathBuf;
-    use std::str::FromStr;
+pub trait AttributeHandler {
+    fn process_attribute(&mut self, attribute: Attribute);
+}
 
-    #[test]
-    fn process_txml_test_from_file() {
-        if let Err(e) = TxmlStructure::from_file(
-            &PathBuf::from_str(
-                "/home/borja/projects/mk-template/tests/resources/template_example_1.xml",
-            )
-            .expect("Should exist"),
-        ) {
-            panic!("Error: {:?}", e);
-        }
-    }
+pub trait Instantiable {
+    fn instantiate(&self, dir: &PathBuf);
 
-    #[test]
-    fn process_txml_test_from_str() {
-        if let Err(e) = TxmlStructure::from_str(
-            r#"
-            <?xml version="1.0" encoding="UTF-8" ?>
+    fn instantiate_with_name(&self, dir: &PathBuf, _name: &str);
+}
 
-<Root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:noNamespaceSchemaLocation="https://lebastudios.org/xml-schemas/txml_schema.xsd">
-    <Directory name="crates" in_command="git init   ;      mkdir pepe">
-        <File name="Hola" extension="rs">
-            fn main()
-            {
-                println!("Hola, mundo!");
-            }
-        </File>
-        <Directory name="crate">
-            <File name="sin_titulo" extension="txt">
-                Hola me llamo Juan
-                Pepe
-            </File>
-        </Directory>
-    </Directory>
+pub trait FsElement {
+    fn from_path(path: &PathBuf) -> Result<Self, io::Error> where Self: Sized;
+}
 
-    <File name="Cargo" extension="toml">
-        [workspace]
-        resolver = "2"
-        members = []
-    </File>
-    <File name="rustfmt" extension="toml"/>
-    <File name=".gitignore"/>
-</Root>
-            "#,
-        ) {
-            panic!("Error: {:?}", e);
-        }
-    }
+pub trait TxmlElement {
+    fn into_txml_element(self) -> String;
 }

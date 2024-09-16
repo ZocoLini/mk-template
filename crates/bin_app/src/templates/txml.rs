@@ -2,7 +2,8 @@ use crate::templates::data::TemplateData;
 use crate::templates::{Template, TemplateError, SAVE_TEMPLATES_DIR};
 use std::path::PathBuf;
 use std::{env, fs};
-use txml_processor::objects::{Instantiable, TxmlStructure};
+use txml_processor::Instantiable;
+use txml_processor::txml_structure::TxmlStructure;
 
 pub const TXML_TEMPLATE: &str = "txml";
 
@@ -18,7 +19,7 @@ impl TxmlTemplate {
 
 impl Template for TxmlTemplate {
     fn generate(&self, name: &str) -> Result<(), TemplateError> {
-        let txml_structure = match TxmlStructure::from_file(&self.txml_file) {
+        let txml_structure = match TxmlStructure::from_txml_file(&self.txml_file) {
             Ok(txml) => txml,
             Err(e) => {
                 println!("Error processing txml: {:?}", e);
@@ -62,6 +63,6 @@ impl Template for TxmlTemplate {
     }
 
     fn validate(&self) -> bool {
-        TxmlStructure::from_file(&self.txml_file).is_ok()
+        TxmlStructure::from_txml_file(&self.txml_file).is_ok()
     }
 }
