@@ -19,8 +19,8 @@ Right now, the application is in development and supports 3 types of templates:
         and saved in that format.</li>
     <li><strong>Git:</strong> A .git directory or link to be cloned. The application will use <i>git clone</i> to 
         the path you provide. If the path becomes unavailable, <i>git clone</i> will fail.</li>
-    <li><strong>TXML:</strong> A XML file that defines the template structure. The application will read the XML file and, if it is valid,
-        save it in the template's directory.</li>
+    <li><strong>TXML:</strong> An XML file that defines the template structure. The application will read the XML file and, if it is valid, 
+    save it in the template's directory. This type of template won't include binaries, whereas a Dir Template would.</li>
 </ul>
 
 ## Table of Contents
@@ -58,7 +58,7 @@ $ mkt [COMMAND] [OPTIONS]
 ```
 
 ### Available commands:
-**mkt** [**add** **-p** \<Path to the template you want to add> [**-n** \<Custom name for the template>] [**-as-dir**]],<br>
+**mkt** [**add** **-p** \<Path to the template you want to add> [**-n** \<Custom name for the template>] \[**-as-dir**]],<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[**list**],<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[**rm** **-n** \<Name of the template you want to remove>]],<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[**spawn** **-n** \<Name of the template you want to spawn> [**-o** \<Define an output name>]],<br>

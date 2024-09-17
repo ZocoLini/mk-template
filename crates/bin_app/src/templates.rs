@@ -38,6 +38,7 @@ pub enum TemplateError
     IoError,
     InvalidTemplate,
     ErrorExecutingGit,
+    ErrorConvertingDir2Txml,
     InvalidPath,
 }
 
@@ -48,6 +49,7 @@ impl Debug for TemplateError {
             TemplateError::InvalidTemplate => write!(f, "Invalid Template"),
             TemplateError::ErrorExecutingGit => write!(f, "Error executing git. Check if it is installed."),
             TemplateError::InvalidPath => write!(f, "Invalid path."),
+            TemplateError::ErrorConvertingDir2Txml => write!(f, "Error converting directory to txml."),
         }
     }
 }

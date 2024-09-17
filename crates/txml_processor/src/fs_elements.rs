@@ -255,9 +255,12 @@ impl FsElement for File {
 
         let file_element = File {
             name: path.file_stem().expect("Should have a name").to_str().unwrap().to_string(),
-            extension: path.extension().expect("Should have an extension").to_str().unwrap().to_string(),
+            extension: path.extension()
+                           .and_then(|ext| ext.to_str())
+                           .unwrap_or("")
+                           .to_string(),
             command: String::from(""),
-            content: fs::read_to_string(path)?,
+            content: fs::read_to_string(path).unwrap_or("".to_string()),
         };
 
         Ok(file_element)

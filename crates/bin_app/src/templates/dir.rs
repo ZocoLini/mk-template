@@ -39,7 +39,7 @@ impl DirTemplate {
 
     pub fn save_as_fxml(&self, name: &str) -> Result<(), TemplateError> {
         let txml_content = TxmlStructure::from_path(&self.dir)
-            .map_err(|_e| TemplateError::IoError)?.into_txml_element();
+            .map_err(|_e| TemplateError::ErrorConvertingDir2Txml)?.into_txml_element();
         
         let txml_file = SAVE_TEMPLATES_DIR.as_path().join(name.to_string() + ".txml");
         
