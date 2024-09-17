@@ -47,10 +47,12 @@ impl TxmlElement for Directory {
         
         result.push_str(">\n");
         
-        let files: Vec<File> = self.files;
-        
-        for file in files {
+        for file in self.files {
             result.push_str(&file.into_txml_element());
+        }
+        
+        for directory in self.directories {
+            result.push_str(&directory.into_txml_element());
         }
         
         result.push_str("</Directory>\n");
@@ -194,7 +196,7 @@ impl TxmlElement for File {
         
         result.push_str(">\n");
         
-        result.push_str(&self.content);
+        result.push_str(&reverse_escape_xml(&self.content));
         
         result.push_str("\n");
         
@@ -288,6 +290,14 @@ fn escape_xml(text: &str) -> String {
         .replace("&gt;", ">")
         .replace("&quot;", "\"")
         .replace("&apos;", "'")
+}
+
+fn reverse_escape_xml(text: &str) -> String {
+    text.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace("\"", "&quot;")
+        .replace("'", "&apos;")
 }
 
 fn remove_indentation(text: &str) -> String {

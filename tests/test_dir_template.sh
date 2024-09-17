@@ -8,7 +8,7 @@ mkdir test_dir
 
 # Adding a template without a name
 
-$APP_BINARY add -p test_dir
+$APP_BINARY add -p test_dir -as-dir
 
 if [ $? -ne 0 ]; then
   echo -e "${FAILED}: Dir Template add command without name failed"
@@ -29,7 +29,7 @@ echo -e "${SUCCESS}: Dir Template add command without name passed the tests"
 
 # Adding a template with a name
 
-$APP_BINARY add -p test_dir -n test_dir_named
+$APP_BINARY add -p test_dir -n test_dir_named -as-dir
 
 if [ $? -ne 0 ]; then
   echo -e "${FAILED}: Dir Template add command with name failed"

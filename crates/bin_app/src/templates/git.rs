@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::templates::data::TemplateData;
 use crate::templates::{is_valid_name, Template, TemplateError, SAVE_TEMPLATES_DIR};
 use std::process;
@@ -21,7 +22,7 @@ impl GitTemplate
 
 impl Template for GitTemplate
 {
-    fn generate(&self, name: &str) -> Result<(), TemplateError>
+    fn generate(&self, name: &str, _flags: HashMap<String, String>) -> Result<(), TemplateError>
     {
         if !is_valid_name(name) {
             return Err(TemplateError::InvalidTemplate);
@@ -38,7 +39,7 @@ impl Template for GitTemplate
         Ok(())
     }
 
-    fn save(&self, name: &str) -> Result<(), TemplateError>
+    fn save(&self, name: &str, _flags: HashMap<String, String>) -> Result<(), TemplateError>
     {
         let template_data = TemplateData::new(GIT_TEMPLATE, &self.url);
         let json_data =

@@ -2,6 +2,7 @@ use crate::templates::data::TemplateData;
 use crate::templates::{Template, TemplateError, SAVE_TEMPLATES_DIR};
 use std::path::PathBuf;
 use std::{env, fs};
+use std::collections::HashMap;
 use txml_processor::Instantiable;
 use txml_processor::txml_structure::TxmlStructure;
 
@@ -18,7 +19,7 @@ impl TxmlTemplate {
 }
 
 impl Template for TxmlTemplate {
-    fn generate(&self, name: &str) -> Result<(), TemplateError> {
+    fn generate(&self, name: &str, _flags: HashMap<String, String>) -> Result<(), TemplateError> {
         let txml_structure = match TxmlStructure::from_txml_file(&self.txml_file) {
             Ok(txml) => txml,
             Err(e) => {
@@ -35,7 +36,7 @@ impl Template for TxmlTemplate {
         Ok(())
     }
 
-    fn save(&self, name: &str) -> Result<(), TemplateError> {
+    fn save(&self, name: &str, _flags: HashMap<String, String>) -> Result<(), TemplateError> {
         let src = self.txml_file.as_path();
         let dst = SAVE_TEMPLATES_DIR
             .as_path()

@@ -70,7 +70,7 @@ impl TxmlElement for TxmlStructure {
       xsi:noNamespaceSchemaLocation="https://lebastudios.org/xml-schemas/txml_schema.xsd">
         "#,
         );
-
+        
         for file in self.files {
             txml_content += file.into_txml_element().as_str();
         }

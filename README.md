@@ -15,7 +15,8 @@ repetitive structures with predefined templates.
 Right now, the application is in development and supports 3 types of templates:
 <ul>
     <li><strong>Directories:</strong> You can save an entire directory as a template. The entire directory will be copied into the 
-        template's directory.</li>
+        template's directory if you use the <i>-as-dir</i> flag. Otherwise, it will be converted into a TXML template 
+        and saved in that format.</li>
     <li><strong>Git:</strong> A .git directory or link to be cloned. The application will use <i>git clone</i> to 
         the path you provide. If the path becomes unavailable, <i>git clone</i> will fail.</li>
     <li><strong>TXML:</strong> A XML file that defines the template structure. The application will read the XML file and, if it is valid,
@@ -57,7 +58,7 @@ $ mkt [COMMAND] [OPTIONS]
 ```
 
 ### Available commands:
-**mkt** [**add** **-p** \<Path to the template you want to add> [**-n** \<Custom name for the template>]],<br>
+**mkt** [**add** **-p** \<Path to the template you want to add> [**-n** \<Custom name for the template>] [**-as-dir**]],<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[**list**],<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[**rm** **-n** \<Name of the template you want to remove>]],<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[**spawn** **-n** \<Name of the template you want to spawn> [**-o** \<Define an output name>]],<br>

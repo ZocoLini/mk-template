@@ -22,7 +22,7 @@ impl Command for Add
         };
 
         if flags.contains_key("-r") || templates::get_template_data_path(template_name).is_none() {
-            templates::add_template(template_name, template_path);
+            templates::add_template(template_name, template_path, flags.clone());
         } else {
             println!("That template name is already being used. Use -r to replace it.");
         }

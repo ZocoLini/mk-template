@@ -18,7 +18,7 @@ impl Command for Spawn
 
         let template_output_name = flags.get("-o").unwrap_or_else(|| template_name);
 
-        templates::generate(template_name, template_output_name);
+        templates::generate(template_name, template_output_name, flags.clone());
     }
 
     fn show_usage()
