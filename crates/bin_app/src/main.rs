@@ -19,6 +19,7 @@ const BIN_NAME: &str = {
 };
 
 const CONFIG_DIR: LazyCell<PathBuf> = LazyCell::new(|| {
+    // TODO: Not home env var present on Windows as default
     let path = PathBuf::from(env::var("HOME").expect("Should have a HOME var.") + "/." + BIN_NAME);
     
     if !path.exists()
