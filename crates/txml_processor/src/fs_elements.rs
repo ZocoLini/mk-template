@@ -399,7 +399,7 @@ mod tests {
         
         let txml = file.into_txml_element();
         
-        assert_eq!(txml, "<File name=\"pepe\" extension=\"rs\" command=\"cargo build\">\nfn main() { println!(\"Hola, mundo!\"); }\n</File>\n");
+        assert_eq!(txml, "<File name=\"pepe\" extension=\"rs\" command=\"cargo build\">\nfn main() { println!(&quot;Hola, mundo!&quot;); }\n</File>\n");
     }
     
     #[test]

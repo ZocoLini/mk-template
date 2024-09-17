@@ -7,8 +7,8 @@ repetitive structures with predefined templates.
 **Basic Knowledge:**
 <ul>
     <li>The application is written in Rust.</li>
-    <li>The configuration is save in <i>~/.mkt</i> </li>
-    <li>Templates are save in <i>~/.mkt/templates</i>, known as the templates' directory. The application always
+    <li>The configuration is saved in <i>$MKT_HOME$</i>. If <i>MKT_HOME</i> is not defined, ~/.mkt will be used instead.</li>
+    <li>Templates are saved in <i>$MKT_HOME$/templates</i>, known as the templates' directory. The application always
         saves a file with the template's data and, sometimes, the template itself in this directory.</li>
 </ul>
 
