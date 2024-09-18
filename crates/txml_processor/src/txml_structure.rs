@@ -10,6 +10,7 @@ use std::{fs, io};
 #[derive(Debug)]
 pub enum TxmlProcessorError {
     InvalidDirectory,
+    BinaryFileError,
     UnknownParseError,
     InvalidTag,
 }
@@ -35,7 +36,7 @@ impl TxmlStructure {
             return Err(TxmlProcessorError::InvalidDirectory);
         }
 
-        let txml_content = fs::read_to_string(txml).expect("Error reading file");
+        let txml_content = fs::read_to_string(txml).map_err(|_| TxmlProcessorError::BinaryFileError)?;
 
         Self::from_str(txml_content.as_str())
     }

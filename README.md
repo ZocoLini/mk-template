@@ -16,7 +16,8 @@ Right now, the application is in development and supports 3 types of templates:
 <ul>
     <li><strong>Directories:</strong> You can save an entire directory as a template. The entire directory will be copied into the 
         template's directory if you use the <i>-as-dir</i> flag. Otherwise, it will be converted into a TXML template 
-        and saved in that format.</li>
+        and saved in that format. <i>Note:</i> If the dir contains some binary content, the template will always be saved 
+        the same way as if the <i>-as-dir</i> flag was used.</li>
     <li><strong>Git:</strong> A .git directory or link to be cloned. The application will use <i>git clone</i> to 
         the path you provide. If the path becomes unavailable, <i>git clone</i> will fail.</li>
     <li><strong>TXML:</strong> An XML file that defines the template structure. The application will read the XML file and, if it is valid, 

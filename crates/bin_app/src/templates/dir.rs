@@ -70,7 +70,11 @@ impl Template for DirTemplate {
         if flags.contains_key("-as-dir") {
             self.save_as_dir(name)
         } else {
-            self.save_as_fxml(name)
+            if let Err(_) = self.save_as_fxml(name) {
+                self.save_as_dir(name)
+            } else {
+                Ok(())
+            }
         }
     }
 

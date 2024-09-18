@@ -260,7 +260,7 @@ impl FsElement for File {
                            .unwrap_or("")
                            .to_string(),
             command: String::from(""),
-            content: fs::read_to_string(path).unwrap_or("".to_string()),
+            content: fs::read_to_string(path).map_err(|_| io::Error::new(io::ErrorKind::Other, "Error reading file"))?,
         };
 
         Ok(file_element)
