@@ -366,11 +366,53 @@ fn is_blank(text: &str) -> bool {
 
 // endregion: File
 
+// region: Variable
+
+pub struct Variable {
+    name: String,
+    value: String,
+}
+
+impl Variable {
+    pub fn new() -> Variable {
+        Variable {
+            name: String::new(),
+            value: String::new(),
+        }
+    }
+    
+    pub fn get_name(&self) -> &str {
+        self.name.as_str()
+    }
+    
+    pub fn get_value(&self) -> &str {
+        self.value.as_str()
+    }
+}
+
+impl AttributeHandler for Variable {
+    fn process_attribute(&mut self, attribute: Attribute) {
+        match attribute.key.0 {
+            b"name" => {
+                self.name = String::from_utf8_lossy(&attribute.value).to_string();
+            }
+            b"value" => {
+                self.value = String::from_utf8_lossy(&attribute.value).to_string()
+            }
+            _ => println!(
+                "Unknown attribute for Variable: {}",
+                String::from_utf8_lossy(attribute.key.0)
+            ),
+        }
+    }
+}
+
+// endregion: Variable
 
 #[cfg(test)]
 mod tests {
     use std::str::FromStr;
-    use crate::fs_elements::Directory;
+    use crate::txml_elements::Directory;
     use crate::txml_structure::TxmlStructure;
     use crate::TxmlElement;
 
@@ -393,7 +435,7 @@ mod tests {
     #[test]
     fn file_into_txml_format_test()
     {
-        let file = crate::fs_elements::File {
+        let file = crate::txml_elements::File {
             name: String::from("pepe"),
             extension: String::from("rs"),
             command: String::from("cargo build"),
@@ -418,7 +460,7 @@ mod tests {
             directories: Vec::new(),
         };
 
-        let file = crate::fs_elements::File {
+        let file = crate::txml_elements::File {
             name: String::from("pepe"),
             extension: String::from("rs"),
             command: String::from("cargo build"),
@@ -429,7 +471,7 @@ mod tests {
         
         txml_structure.add_directory(dir);
         
-        let file = crate::fs_elements::File {
+        let file = crate::txml_elements::File {
             name: String::from("pepa"),
             extension: String::from("rs"),
             command: String::from("cargo build"),

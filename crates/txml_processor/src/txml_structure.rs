@@ -1,4 +1,4 @@
-use crate::fs_elements::{Directory, File};
+use crate::txml_elements::{Directory, File, Variable};
 use crate::{AttributeHandler, FsElement, Instantiable, TxmlElement};
 use quick_xml::events::Event;
 use quick_xml::Reader;
@@ -6,6 +6,7 @@ use std::collections::VecDeque;
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::{fs, io};
+use quick_xml::events::attributes::Attribute;
 
 #[derive(Debug)]
 pub enum TxmlProcessorError {
@@ -18,6 +19,7 @@ pub enum TxmlProcessorError {
 pub struct TxmlStructure {
     files: Vec<File>,
     directories: Vec<Directory>,
+    renamable: bool,
 }
 
 impl TxmlStructure {
@@ -25,9 +27,55 @@ impl TxmlStructure {
         TxmlStructure {
             files: Vec::new(),
             directories: Vec::new(),
+            renamable: true,
         }
     }
 
+    pub fn validate_txml_file(txml: &PathBuf) -> bool {
+        if !txml.exists() {
+            return false;
+        }
+        if !txml.is_file() {
+            return false;
+        }
+
+        let txml_content = fs::read_to_string(txml);
+
+        match txml_content {
+            Err(_) => false,
+            Ok(content) => Self::validate_txml_str(content.as_str())
+        }
+    }
+    
+    pub fn validate_txml_str(txml: &str) -> bool {
+        let mut reader = Reader::from_str(&txml);
+        let mut event_buf = Vec::new();
+
+        loop {
+            match reader.read_event_into(&mut event_buf) {
+                Ok(Event::Start(ref e)) => match e.name().0 {
+                    b"Variable" => continue,
+                    b"Root" => continue,
+                    b"Directory" => continue,
+                    b"File" => continue,
+                    _ => return false,
+                },
+                Ok(Event::Empty(e)) => match e.name().0 {
+                    b"Variable" => continue,
+                    b"Root" => continue,
+                    b"Directory" => continue,
+                    b"File" => continue,
+                    _ => return false,
+                },
+                Ok(Event::Eof) => return true,
+                Err(_e) => return false,
+                _ => (),
+            }
+
+            event_buf.clear();
+        }
+    }
+    
     pub fn from_txml_file(txml: &PathBuf) -> Result<TxmlStructure, TxmlProcessorError> {
         if !txml.exists() {
             return Err(TxmlProcessorError::InvalidDirectory);
@@ -53,12 +101,53 @@ impl TxmlStructure {
         Ok(txml_structure)
     }
 
+    pub fn obtain_variables(fxml: &str) -> Result<Vec<Variable>, TxmlProcessorError>
+    {
+        let mut variables = Vec::new();
+        
+        let mut reader = Reader::from_str(fxml);
+        let mut event_buf = Vec::new();
+
+        loop {
+            match reader.read_event_into(&mut event_buf) {
+                Ok(Event::Empty(ref e)) => match e.name().0 {
+                    b"Variable" => {
+                        let mut variable = Variable::new();
+                        
+                        e.attributes().for_each(|attr| {
+                            variable.process_attribute(attr.expect("Error reading attribute"))
+                        });
+                        
+                        variables.push(variable);
+                    }
+                    _ => break,
+                },
+                Ok(Event::Eof) => break,
+                Err(_e) => return Err(TxmlProcessorError::UnknownParseError),
+                _ => continue,
+            }
+
+            event_buf.clear();
+        }
+        
+        Ok(variables)
+    }
+    
     pub fn add_file(&mut self, file: File) {
         self.files.push(file);
     }
 
     pub fn add_directory(&mut self, directory: Directory) {
         self.directories.push(directory);
+    }
+}
+
+impl AttributeHandler for TxmlStructure {
+    fn process_attribute(&mut self, attr: Attribute) {
+        match attr.key.0 {
+            b"renamable" => self.renamable = String::from_utf8_lossy(&attr.value).to_string() == "true",
+            _ => (),
+        }
     }
 }
 
@@ -92,7 +181,24 @@ impl FromStr for TxmlStructure {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut txml_structure = TxmlStructure::new();
 
-        let mut reader = Reader::from_str(s);
+        let vars = Self::obtain_variables(s)?;
+        let mut s = s.to_string();
+        
+        for var in vars {
+            let value = if var.get_value().is_empty() {
+                println!("Please, introduce the value for the variable '{}'", var.get_name());
+                let mut value = String::new();
+                io::stdin().read_line(&mut value).expect("Error reading from stdin");
+                value.trim().to_string()
+            } else {
+                var.get_value().to_string()
+            };
+            
+            let variable_expression = format!("${{{}}}", var.get_name());
+            s = s.replace(variable_expression.as_str(), value.as_str());
+        }
+        
+        let mut reader = Reader::from_str(&s);
         let mut event_buf = Vec::new();
 
         let mut dir_queue: VecDeque<Directory> = VecDeque::new();
@@ -101,7 +207,12 @@ impl FromStr for TxmlStructure {
         loop {
             match reader.read_event_into(&mut event_buf) {
                 Ok(Event::Start(ref e)) => match e.name().0 {
-                    b"Root" => continue,
+                    b"Variable" => continue,
+                    b"Root" => {
+                        e.attributes().for_each(|attr| {
+                            txml_structure.process_attribute(attr.expect("Error reading attribute"))
+                        });
+                    },
                     b"Directory" => {
                         let mut directory = Directory::new();
 
@@ -124,6 +235,7 @@ impl FromStr for TxmlStructure {
                     _ => return Err(TxmlProcessorError::InvalidTag),
                 },
                 Ok(Event::Empty(e)) => match e.name().0 {
+                    b"Variable" => continue,
                     b"Root" => continue,
                     b"Directory" => {
                         let mut directory = Directory::new();
@@ -194,7 +306,7 @@ impl FromStr for TxmlStructure {
 
                         current_file = None;
                     }
-                    _ => return Err(TxmlProcessorError::InvalidTag),
+                    _ => continue,
                 },
                 Ok(Event::Eof) => break,
                 Err(_e) => return Err(TxmlProcessorError::UnknownParseError),
@@ -218,11 +330,11 @@ impl Instantiable for TxmlStructure {
     }
 
     fn instantiate_with_name(&self, dir: &PathBuf, name: &str) {
-        if self.files.len() + self.directories.len() > 1 {
+        if self.files.len() + self.directories.len() > 1 || !self.renamable {
             self.instantiate(dir);
             return;
         }
-
+        
         if self.files.len() == 1 {
             self.files[0].instantiate_with_name(dir, name);
             return;
@@ -275,5 +387,32 @@ mod tests {
         ) {
             panic!("Error: {:?}", e);
         }
+    }
+    
+    #[test]
+    fn txml_variables_replacement_test()
+    {
+        let txml = r#"
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://lebastudios.org/xml-schemas/txml_schema.xsd">
+    <Variable name="VAR1" value="folder1"/>
+    <Variable name="VAR2" value="file1"/>
+    <Directory name="${VAR1}" >
+        <File name="${VAR2}" extension="txt" >
+            ${VAR1} content
+        </File>
+    </Directory>
+</Root>
+        "#;
+        
+        let txml_variables = TxmlStructure::obtain_variables(txml).unwrap();
+        
+        assert_eq!(txml_variables.len(), 2);
+        assert_eq!(txml_variables[0].get_name(), "VAR1");
+        assert_eq!(txml_variables[0].get_value(), "folder1");
+        assert_eq!(txml_variables[1].get_name(), "VAR2");
+        assert_eq!(txml_variables[1].get_value(), "file1");
     }
 }

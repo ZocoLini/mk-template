@@ -2,12 +2,23 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
     <xs:element name="Root">
         <xs:complexType>
-            <xs:choice maxOccurs="unbounded">
-                <xs:element name="File" type="fileType" minOccurs="0" maxOccurs="unbounded"/>
-                <xs:element name="Directory" type="directoryType" minOccurs="0" maxOccurs="unbounded"/>
-            </xs:choice>
+            <xs:sequence>
+                <xs:element name="Variable" type="variableType" minOccurs="0" maxOccurs="unbounded"/>
+
+                <xs:choice minOccurs="0" maxOccurs="unbounded">
+                    <xs:element name="File" type="fileType" minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="Directory" type="directoryType" minOccurs="0" maxOccurs="unbounded"/>
+                </xs:choice>
+            </xs:sequence>
+
+            <xs:attribute name="renamable" type="xs:boolean" default="true"/>
         </xs:complexType>
     </xs:element>
+
+    <xs:complexType name="variableType">
+        <xs:attribute name="name" type="xs:string" use="required"/>
+        <xs:attribute name="value" type="xs:string" />
+    </xs:complexType>
 
     <xs:complexType name="fileType">
         <xs:complexContent>

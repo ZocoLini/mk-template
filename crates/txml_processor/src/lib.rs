@@ -2,7 +2,7 @@ use quick_xml::events::attributes::Attribute;
 use std::path::PathBuf;
 use std::io;
 
-pub mod fs_elements;
+pub mod txml_elements;
 pub mod txml_structure;
 mod commands;
 

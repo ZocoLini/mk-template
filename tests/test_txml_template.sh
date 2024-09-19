@@ -6,11 +6,13 @@ TXML_0="resources/template_example_0.xml"
 TXML_1="resources/template_example_1.xml"
 TXML_2="resources/template_example_2.xml"
 TXML_3="resources/template_example_3.xml"
+TXML_4="resources/template_example_4.xml"
 
 TXML_0_NAME="template_example_0"
 TXML_1_NAME="template_example_1"
 TXML_2_NAME="template_example_2"
 TXML_3_NAME="template_example_3"
+TXML_4_NAME="template_example_4"
 
 ### Testing add command
 
@@ -60,7 +62,7 @@ if [ $? -ne 0 ]; then
 fi
 
 if [ -f "$TEMPLATES_DIR/$TXML_3_NAME" ]; then
-  echo -e "${FAILED}: TXML Template add command with out name created the template data with an invalid txml file content"
+  echo -e "${FAILED}: TXML Template add command with out name created the template data with an unexpected name"
   exit 1
 fi
 
@@ -155,3 +157,43 @@ if [ -d "$TEMPLATES_DIR/0.txml" ]; then
 fi
 
 echo -e "${SUCCESS}: TXML Template remove command passed the tests"
+
+### Testing example with Variable Tags
+
+$APP_BINARY add -p "$TXML_4"
+
+if [ $? -ne 0 ]; then
+  echo -e "${FAILED}: TXML Template add command failed with example 4"
+  exit 1
+fi
+
+if [ ! -f "$TEMPLATES_DIR/$TXML_4_NAME" ]; then
+  echo -e "${FAILED}: TXML Template add command didn't create the template data whe using variable tags"
+  exit 1
+fi
+#####
+$APP_BINARY spawn -n "$TXML_4_NAME" -o 4
+
+if [ $? -ne 0 ]; then
+  echo -e "${FAILED}: TXML Template spawn command failed with example 4"
+  exit 1
+fi
+
+if [ ! -d "./folder1" ]; then
+  echo -e "${FAILED}: TXML Template spawn command didn't create the template 4 folder with variable tags as expected"
+  exit 1
+fi
+
+if [ ! -f "./folder1/file1.txt" ]; then
+  echo -e "${FAILED}: TXML Template spawn command didn't create the template 4 file with variable tags as expected"
+  exit 1
+fi
+
+EXPECTED_CONTENT=$(cat folder1/file1.txt)
+
+if [ ! "$EXPECTED_CONTENT" = "file1 content" ]; then
+  echo -e "${FAILED}: TXML Template spawn command didn't create the template 4 file content with variable tags as expected"
+  exit 1
+fi
+
+echo -e "${SUCCESS}: TXML Template spawn command with variable tags passed the tests"

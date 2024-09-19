@@ -64,6 +64,6 @@ impl Template for TxmlTemplate {
     }
 
     fn validate(&self) -> bool {
-        TxmlStructure::from_txml_file(&self.txml_file).is_ok()
+        TxmlStructure::validate_txml_file(&self.txml_file)
     }
 }

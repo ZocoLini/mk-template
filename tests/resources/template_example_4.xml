@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://lebastudios.org/xml-schemas/txml_schema.xsd" renamable="false">
+    <Variable name="VAR1" value="folder1"/>
+    <Variable name="VAR2" value="file1"/>
+    <Directory name="${VAR1}" >
+        <File name="${VAR2}" extension="txt" >
+            ${VAR2} content
+        </File>
+    </Directory>
+</Root>
