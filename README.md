@@ -41,14 +41,31 @@ Right now, the application is in development and supports 3 types of templates:
     $ cd mk-template;
    ```
    
-2. Compile and install the package (Linux) (Need cargo installed):
+2. Compile and install the binary (Need cargo installed):
+<ul>
+   <li>
+        <strong>Linux:</strong> You have a installer.sh file that you can run. The binary will be copied to
+        <i>~/-local/bin</i>
 
-   ```bash
-    $ chmod +x installer.sh;
-    $ ./installer.sh;
-   ```
-   
-    2.1. If you are using Windows or MacOS, you have to compile and install the package manually.
+```bash
+$ chmod +x installer.sh;
+$ ./installer.sh;
+```
+   </li>
+
+   <li>
+        <strong>Windows:</strong> You have a installer.bat file that you can run. The binary will be copied to
+        <i>%USERPROFILE%\AppData\Local\Microsoft\WindowsApps</i>
+
+```cmd
+> installer.bat
+```
+   </li>
+
+   <li>
+        <strong>MacOS:</strong> You have to compile and install the package manually.
+   </li>
+</ul>
 
 ## Commands
 
