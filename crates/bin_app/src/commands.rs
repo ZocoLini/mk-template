@@ -91,13 +91,14 @@ mod tests
     #[test]
     fn test_map_flags()
     {
-        let args = vec!["-n", "name", "a", "-a", "-p", "path", "-r"];
+        let args = vec!["-n", "name", "a", "-a", "-p", "path", "-r", "-as-dir"];
         let result = map_flags(&args.iter().map(|s| s.to_string()).collect());
 
         assert_eq!(result.get("-n").unwrap(), "name");
         assert_eq!(result.get("-p").unwrap(), "path");
         assert_eq!(result.get("-r").unwrap(), "");
         assert_eq!(result.get("-a").unwrap(), "");
+        assert_eq!(result.get("-as-dir").unwrap(), "");
 
         let args = vec!["mkt", "remove", "-n", "crates"];
         let result = map_flags(&args.iter().map(|s| s.to_string()).collect());

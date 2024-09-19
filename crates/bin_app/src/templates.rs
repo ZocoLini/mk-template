@@ -8,6 +8,7 @@ use crate::templates::dir::DirTemplate;
 use crate::templates::git::GitTemplate;
 use crate::CONFIG_DIR;
 use std::cell::LazyCell;
+use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use std::fs;
 use std::fs::DirEntry;
@@ -26,8 +27,8 @@ pub const SAVE_TEMPLATES_DIR: LazyCell<PathBuf> = LazyCell::new(|| {
 
 pub trait Template
 {
-    fn generate(&self, name: &str) -> Result<(), TemplateError>;
-    fn save(&self, name: &str) -> Result<(), TemplateError>;
+    fn generate(&self, name: &str, flags: HashMap<String, String>) -> Result<(), TemplateError>;
+    fn save(&self, name: &str, flags: HashMap<String, String>) -> Result<(), TemplateError>;
     fn remove(&self);
     fn validate(&self) -> bool;
 }
@@ -37,6 +38,7 @@ pub enum TemplateError
     IoError,
     InvalidTemplate,
     ErrorExecutingGit,
+    ErrorConvertingDir2Txml,
     InvalidPath,
 }
 
@@ -47,11 +49,12 @@ impl Debug for TemplateError {
             TemplateError::InvalidTemplate => write!(f, "Invalid Template"),
             TemplateError::ErrorExecutingGit => write!(f, "Error executing git. Check if it is installed."),
             TemplateError::InvalidPath => write!(f, "Invalid path."),
+            TemplateError::ErrorConvertingDir2Txml => write!(f, "Error converting directory to txml."),
         }
     }
 }
 
-pub fn add_template(name: &str, path: &str)
+pub fn add_template(name: &str, path: &str, flags: HashMap<String, String>)
 {
     remove_template(name);
 
@@ -64,7 +67,7 @@ pub fn add_template(name: &str, path: &str)
         }
     };
 
-    template.save(name).expect("Should save the template.");
+    template.save(name, flags).expect("Should save the template.");
 }
 
 fn build_template(path: &str) -> Result<Box<dyn Template>, TemplateError>
@@ -161,7 +164,7 @@ pub fn get_template_data(name: &str) -> Option<TemplateData>
     }
 }
 
-pub fn generate(name: &str, output_name: &str)
+pub fn generate(name: &str, output_name: &str, flags: HashMap<String, String>)
 {
     let template_data = get_template_data(name);
 
@@ -170,7 +173,7 @@ pub fn generate(name: &str, output_name: &str)
         return;
     }
 
-    match template_data.unwrap().to_template().generate(output_name) {
+    match template_data.unwrap().to_template().generate(output_name, flags) {
         Err(TemplateError::ErrorExecutingGit) => println!("Error executing git. Check if it is installed."),
         Err(_) => println!("Error generating the template."),
         _ => ()

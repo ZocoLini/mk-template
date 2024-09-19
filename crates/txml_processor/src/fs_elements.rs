@@ -47,10 +47,12 @@ impl TxmlElement for Directory {
         
         result.push_str(">\n");
         
-        let files: Vec<File> = self.files;
-        
-        for file in files {
+        for file in self.files {
             result.push_str(&file.into_txml_element());
+        }
+        
+        for directory in self.directories {
+            result.push_str(&directory.into_txml_element());
         }
         
         result.push_str("</Directory>\n");
@@ -194,7 +196,7 @@ impl TxmlElement for File {
         
         result.push_str(">\n");
         
-        result.push_str(&self.content);
+        result.push_str(&reverse_escape_xml(&self.content));
         
         result.push_str("\n");
         
@@ -253,9 +255,12 @@ impl FsElement for File {
 
         let file_element = File {
             name: path.file_stem().expect("Should have a name").to_str().unwrap().to_string(),
-            extension: path.extension().expect("Should have an extension").to_str().unwrap().to_string(),
+            extension: path.extension()
+                           .and_then(|ext| ext.to_str())
+                           .unwrap_or("")
+                           .to_string(),
             command: String::from(""),
-            content: fs::read_to_string(path)?,
+            content: fs::read_to_string(path).map_err(|_| io::Error::new(io::ErrorKind::Other, "Error reading file"))?,
         };
 
         Ok(file_element)
@@ -288,6 +293,14 @@ fn escape_xml(text: &str) -> String {
         .replace("&gt;", ">")
         .replace("&quot;", "\"")
         .replace("&apos;", "'")
+}
+
+fn reverse_escape_xml(text: &str) -> String {
+    text.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace("\"", "&quot;")
+        .replace("'", "&apos;")
 }
 
 fn remove_indentation(text: &str) -> String {
@@ -389,7 +402,7 @@ mod tests {
         
         let txml = file.into_txml_element();
         
-        assert_eq!(txml, "<File name=\"pepe\" extension=\"rs\" command=\"cargo build\">\nfn main() { println!(\"Hola, mundo!\"); }\n</File>\n");
+        assert_eq!(txml, "<File name=\"pepe\" extension=\"rs\" command=\"cargo build\">\nfn main() { println!(&quot;Hola, mundo!&quot;); }\n</File>\n");
     }
     
     #[test]

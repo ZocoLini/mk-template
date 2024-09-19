@@ -7,19 +7,21 @@ repetitive structures with predefined templates.
 **Basic Knowledge:**
 <ul>
     <li>The application is written in Rust.</li>
-    <li>The configuration is save in <i>~/.mkt</i> </li>
-    <li>Templates are save in <i>~/.mkt/templates</i>, known as the templates' directory. The application always
+    <li>The configuration is saved in <i>$MKT_HOME</i>. If <i>$MKT_HOME</i> is not defined, ~/.mkt will be used instead.</li>
+    <li>Templates are saved in <i>$MKT_HOME/templates</i>, known as the templates' directory. The application always
         saves a file with the template's data and, sometimes, the template itself in this directory.</li>
 </ul>
 
 Right now, the application is in development and supports 3 types of templates:
 <ul>
     <li><strong>Directories:</strong> You can save an entire directory as a template. The entire directory will be copied into the 
-        template's directory.</li>
+        template's directory if you use the <i>-as-dir</i> flag. Otherwise, it will be converted into a TXML template 
+        and saved in that format. <i>Note:</i> If the dir contains some binary content, the template will always be saved 
+        the same way as if the <i>-as-dir</i> flag was used.</li>
     <li><strong>Git:</strong> A .git directory or link to be cloned. The application will use <i>git clone</i> to 
         the path you provide. If the path becomes unavailable, <i>git clone</i> will fail.</li>
-    <li><strong>TXML:</strong> A XML file that defines the template structure. The application will read the XML file and, if it is valid,
-        save it in the template's directory.</li>
+    <li><strong>TXML:</strong> An XML file that defines the template structure. The application will read the XML file and, if it is valid, 
+    save it in the template's directory. This type of template won't include binaries, whereas a Dir Template would.</li>
 </ul>
 
 ## Table of Contents
@@ -57,7 +59,7 @@ $ mkt [COMMAND] [OPTIONS]
 ```
 
 ### Available commands:
-**mkt** [**add** **-p** \<Path to the template you want to add> [**-n** \<Custom name for the template>]],<br>
+**mkt** [**add** **-p** \<Path to the template you want to add> [**-n** \<Custom name for the template>] \[**-as-dir**]],<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[**list**],<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[**rm** **-n** \<Name of the template you want to remove>]],<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[**spawn** **-n** \<Name of the template you want to spawn> [**-o** \<Define an output name>]],<br>
