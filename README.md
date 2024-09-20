@@ -128,12 +128,14 @@ The schema is available at [lebastudios.org](https://lebastudios.org/xml-schemas
 ### Elements
 <ul>
     <li><strong>Root: </strong>Root defines the actual directory where you want to 'spawn' the 
-        template. The root element doesn't have any special attributes. Inside the root element, you can define
-        the following elements:
+        template. Inside the root element, you can define the following elements:
         <ul>
             <li>Directory</li>
             <li>File</li>
         </ul>
+        This element also has an attribute called <strong>renamable</strong> that defines if the <i>-o</i> flag
+        would be used or ignored. If you are using <i>Variables</i> in the template and the main File or Directory uses 
+        the variable, you must set this attribute to <i>false</i> to avoid the variable being ignored.
     </li>
     <li><strong>Directory: </strong>Directory defines a directory that will be created inside the element 
         it is defined. It can contain the same elements as the Root can. The directory element has the following attributes:
@@ -155,6 +157,17 @@ The schema is available at [lebastudios.org](https://lebastudios.org/xml-schemas
             <li><strong>command: </strong>Commands that should be executed <strong>after</strong>
                 the file is created. The commands are separated by a semicolon and executed in the
                 order they are defined.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>Variable: </strong>Variable defines a variable that can be used in the name of the file or directory.
+         It can also be used in the content of the file. The variable element has the following attributes:
+        <ul>
+            <li><strong>name: </strong>Defines the name of the variable. To use this variable you should use
+                the following syntax: <i>${variable_name}</i></li>
+            <li><strong>value: </strong>Defines the value of the variable. All the occurrences of the variable
+                will be replaced by this value. This attribute is optional and, if not defined, the variable
+                will be asked when the template is spawned.</li>
         </ul>
     </li>
 </ul>
@@ -182,8 +195,9 @@ The schema is available at [lebastudios.org](https://lebastudios.org/xml-schemas
 ```xml
 <?xml version="1.0" encoding="UTF-8" ?>
 <Root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:noNamespaceSchemaLocation="https://lebastudios.org/xml-schemas/txml_schema.xsd">
-   <Directory name="rust-project" in_command="git init">
+      xsi:noNamespaceSchemaLocation="https://lebastudios.org/xml-schemas/txml_schema.xsd" renamable="false">
+   <Variable name="rust-project" />
+   <Directory name="${rust-project}" in_command="git init">
       <Directory name="crates"/>
       
       <File name="Cargo" extension="toml">
@@ -206,6 +220,7 @@ The schema is available at [lebastudios.org](https://lebastudios.org/xml-schemas
 
 <Root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="https://lebastudios.org/xml-schemas/txml_schema.xsd">
+   <Variable name="c-project" />
    <Directory name="rust-project" in_command="git init">
       <Directory name="crates"/>
       
@@ -219,7 +234,7 @@ The schema is available at [lebastudios.org](https://lebastudios.org/xml-schemas
       <File name="rustfmt" extension="toml"/>
    </Directory>
    
-   <Directory name="c-project" in_command="git init">
+   <Directory name="${c-project}" in_command="git init">
       <Directory name="src"/>
       
       <File name="main" extension="c">
