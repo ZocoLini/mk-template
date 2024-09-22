@@ -3,6 +3,7 @@ mod list;
 mod remove;
 mod spawn;
 mod version;
+mod help;
 
 use crate::commands::CommandBuildError::NotRecognisedCommand;
 use std::collections::HashMap;
@@ -37,6 +38,7 @@ pub fn try_execute(s: &str) -> Result<(), CommandBuildError>
         "rm" => Ok(Remove::execute(flags)),
         "list" => Ok(List::execute(flags)),
         "version" => Ok(Version::execute(flags)),
+        "help" => Ok(help::Help::execute(flags)),
         _ => Err(NotRecognisedCommand),
     }
 }
