@@ -32,6 +32,26 @@ The schema is available at [lebastudios.org](https://lebastudios.org/xml-schemas
         would be used or ignored. If you are using <i>Variables</i> in the template and the main File or Directory uses 
         the variable, you must set this attribute to <i>false</i> to avoid the variable being ignored.
     </li>
+    <li>
+        <strong>Variable: </strong>Variable defines a variable that can be used in the name of the file or directory.
+         It can also be used in the content of the file. The variable element has the following attributes:
+        <ul>
+            <li><strong>name: </strong>Defines the name of the variable. To use this variable you should use
+                the following syntax: <i>${variable_name}</i></li>
+            <li><strong>value: </strong>Defines the value of the variable. All the occurrences of the variable
+                will be replaced by this value. This attribute is optional and, if not defined, the variable
+                will be asked when the template is spawned.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>Metadata: </strong> The metadata element has the following attributes:
+        <ul>
+            <li><strong>author: </strong>Defines the author of the template.</li>
+            <li><strong>date: </strong>Defines the date of the template.</li>
+            <li><strong>version: </strong>Defines the version of the template.</li>
+            <li><strong>description: </strong>Defines the description of the template.</li>
+        </ul>
+    </li>
     <li><strong>Directory: </strong>Directory defines a directory that will be created inside the element 
         it is defined. It can contain the same elements as the Root can. The directory element has the following attributes:
         <ul>
@@ -52,17 +72,6 @@ The schema is available at [lebastudios.org](https://lebastudios.org/xml-schemas
             <li><strong>command: </strong>Commands that should be executed <strong>after</strong>
                 the file is created. The commands are separated by a semicolon and executed in the
                 order they are defined.</li>
-        </ul>
-    </li>
-    <li>
-        <strong>Variable: </strong>Variable defines a variable that can be used in the name of the file or directory.
-         It can also be used in the content of the file. The variable element has the following attributes:
-        <ul>
-            <li><strong>name: </strong>Defines the name of the variable. To use this variable you should use
-                the following syntax: <i>${variable_name}</i></li>
-            <li><strong>value: </strong>Defines the value of the variable. All the occurrences of the variable
-                will be replaced by this value. This attribute is optional and, if not defined, the variable
-                will be asked when the template is spawned.</li>
         </ul>
     </li>
 </ul>
