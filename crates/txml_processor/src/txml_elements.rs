@@ -409,10 +409,54 @@ impl AttributeHandler for Variable {
 
 // endregion: Variable
 
+// region: TxmlMetadata
+
+pub struct TemplateMetadata {
+    pub author: String,
+    pub date: String,
+    pub version: String,
+    pub description: String,
+}
+
+impl TemplateMetadata {
+    pub fn new() -> TemplateMetadata {
+        TemplateMetadata {
+            author: String::new(),
+            date: String::new(),
+            version: String::new(),
+            description: String::new(),
+        }
+    }
+}
+
+impl AttributeHandler for TemplateMetadata {
+    fn process_attribute(&mut self, attribute: Attribute) {
+        match attribute.key.0 {
+            b"author" => self.author = String::from_utf8_lossy(&attribute.value).to_string(),
+            b"date" => self.date = String::from_utf8_lossy(&attribute.value).to_string(),
+            b"version" => self.version = String::from_utf8_lossy(&attribute.value).to_string(),
+            b"description" => self.description = String::from_utf8_lossy(&attribute.value).to_string(),
+            _ => (),
+        }
+    }
+}
+
+impl TxmlElement for TemplateMetadata {
+    fn into_txml_element(self) -> String {
+        format!(
+            r#"<Metadata author="{}" date="{}" version="{}" description="{}"/>
+            "#,
+            self.author, self.date, self.version, self.description
+        )
+    }
+}
+
+// endregion: TxmlMetadata
+
 #[cfg(test)]
 mod tests {
     use std::str::FromStr;
-    use crate::txml_elements::Directory;
+    use crate::txml_elements::{Directory, TemplateMetadata};
     use crate::txml_structure::TxmlStructure;
     use crate::TxmlElement;
 
@@ -483,5 +527,42 @@ mod tests {
         let txml_string = txml_structure.into_txml_element();
         
         assert!(TxmlStructure::from_str(txml_string.as_str()).is_ok());
+    }
+
+    #[test]
+    fn metadata_into_txml_format_test()
+    {
+        let expected = r#"
+        <Metadata author="Borja Castellano" date="22/09/2024" version="1.0.0" description="Testing metadata info"/>
+        "#;
+
+        let metadata = TemplateMetadata {
+            author: String::from("Borja Castellano"),
+            date: String::from("22/09/2024"),
+            version: String::from("1.0.0"),
+            description: String::from("Testing metadata info"),
+        }.into_txml_element();
+
+        assert_eq!(expected.trim(), metadata.trim());
+    }
+
+    #[test]
+    fn txml_metadata_parser_test() 
+    {
+        let txml = r#"
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://lebastudios.org/xml-schemas/txml_schema.xsd">
+    <Metadata author="Borja Castellano" date="22/09/2024" version="1.0.0" description="Testing metadata info"/>
+</Root>        
+        "#;
+
+        let txml_structure = TxmlStructure::from_str(txml).unwrap();
+
+        assert_eq!(txml_structure.metadata().author, "Borja Castellano");
+        assert_eq!(txml_structure.metadata().date, "22/09/2024");
+        assert_eq!(txml_structure.metadata().version, "1.0.0");
+        assert_eq!(txml_structure.metadata().description, "Testing metadata info");
     }
 }

@@ -3,6 +3,7 @@
     <xs:element name="Root">
         <xs:complexType>
             <xs:sequence>
+                <xs:element name="Metadata" type="metadataType" minOccurs="0"/>
                 <xs:element name="Variable" type="variableType" minOccurs="0" maxOccurs="unbounded"/>
 
                 <xs:choice minOccurs="0" maxOccurs="unbounded">
@@ -14,6 +15,13 @@
             <xs:attribute name="renamable" type="xs:boolean" default="true"/>
         </xs:complexType>
     </xs:element>
+
+    <xs:complexType name="metadataType">
+        <xs:attribute name="author" type="xs:string"/>
+        <xs:attribute name="date" type="xs:string"/>
+        <xs:attribute name="version" type="xs:string"/>
+        <xs:attribute name="description" type="xs:string" use="required"/>
+    </xs:complexType>
 
     <xs:complexType name="variableType">
         <xs:attribute name="name" type="xs:string" use="required"/>

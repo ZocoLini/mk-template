@@ -1,4 +1,4 @@
-use crate::txml_elements::{Directory, File, Variable};
+use crate::txml_elements::{Directory, File, TemplateMetadata, Variable};
 use crate::{AttributeHandler, FsElement, Instantiable, TxmlElement};
 use quick_xml::events::Event;
 use quick_xml::Reader;
@@ -19,6 +19,7 @@ pub enum TxmlProcessorError {
 pub struct TxmlStructure {
     files: Vec<File>,
     directories: Vec<Directory>,
+    metadata: TemplateMetadata,
     renamable: bool,
 }
 
@@ -27,10 +28,15 @@ impl TxmlStructure {
         TxmlStructure {
             files: Vec::new(),
             directories: Vec::new(),
+            metadata: TemplateMetadata::new(),
             renamable: true,
         }
     }
 
+    pub fn metadata(&self) -> &TemplateMetadata {
+        &self.metadata
+    }
+    
     pub fn validate_txml_file(txml: &PathBuf) -> bool {
         if !txml.exists() {
             return false;
@@ -55,6 +61,7 @@ impl TxmlStructure {
             match reader.read_event_into(&mut event_buf) {
                 Ok(Event::Start(ref e)) => match e.name().0 {
                     b"Variable" => continue,
+                    b"Metadata" => continue,
                     b"Root" => continue,
                     b"Directory" => continue,
                     b"File" => continue,
@@ -62,6 +69,7 @@ impl TxmlStructure {
                 },
                 Ok(Event::Empty(e)) => match e.name().0 {
                     b"Variable" => continue,
+                    b"Metadata" => continue,
                     b"Root" => continue,
                     b"Directory" => continue,
                     b"File" => continue,
@@ -161,6 +169,8 @@ impl TxmlElement for TxmlStructure {
         "#,
         );
         
+        txml_content += self.metadata.into_txml_element().as_str();
+        
         for file in self.files {
             txml_content += file.into_txml_element().as_str();
         }
@@ -208,6 +218,11 @@ impl FromStr for TxmlStructure {
             match reader.read_event_into(&mut event_buf) {
                 Ok(Event::Start(ref e)) => match e.name().0 {
                     b"Variable" => continue,
+                    b"Metadata" => {
+                        e.attributes().for_each(|attr| {
+                            txml_structure.metadata.process_attribute(attr.expect("Error reading attribute"))
+                        });
+                    },
                     b"Root" => {
                         e.attributes().for_each(|attr| {
                             txml_structure.process_attribute(attr.expect("Error reading attribute"))
@@ -237,6 +252,11 @@ impl FromStr for TxmlStructure {
                 Ok(Event::Empty(e)) => match e.name().0 {
                     b"Variable" => continue,
                     b"Root" => continue,
+                    b"Metadata" => {
+                        e.attributes().for_each(|attr| {
+                            txml_structure.metadata.process_attribute(attr.expect("Error reading attribute"))
+                        });
+                    }
                     b"Directory" => {
                         let mut directory = Directory::new();
                         e.attributes().for_each(|attr| {
@@ -390,8 +410,7 @@ mod tests {
     }
     
     #[test]
-    fn txml_variables_replacement_test()
-    {
+    fn txml_variables_replacement_test() {
         let txml = r#"
 <?xml version="1.0" encoding="UTF-8" ?>
 
