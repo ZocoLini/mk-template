@@ -5,6 +5,7 @@ use std::io;
 pub mod txml_elements;
 pub mod txml_structure;
 mod commands;
+mod reader;
 
 pub trait AttributeHandler {
     fn process_attribute(&mut self, attribute: Attribute);
