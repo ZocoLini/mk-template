@@ -1,12 +1,11 @@
+use crate::reader::{ElementState, TxmlEvent, TxmlReader, TxmlReaderError};
 use crate::txml_elements::{Directory, File, TemplateMetadata, Variable};
 use crate::{AttributeHandler, FsElement, Instantiable, TxmlElement};
-use quick_xml::events::Event;
-use quick_xml::Reader;
+use quick_xml::events::attributes::Attribute;
 use std::collections::VecDeque;
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::{fs, io};
-use quick_xml::events::attributes::Attribute;
 
 #[derive(Debug)]
 pub enum TxmlProcessorError {
@@ -36,7 +35,7 @@ impl TxmlStructure {
     pub fn metadata(&self) -> &TemplateMetadata {
         &self.metadata
     }
-    
+
     pub fn validate_txml_file(txml: &PathBuf) -> bool {
         if !txml.exists() {
             return false;
@@ -54,33 +53,14 @@ impl TxmlStructure {
     }
     
     pub fn validate_txml_str(txml: &str) -> bool {
-        let mut reader = Reader::from_str(&txml);
-        let mut event_buf = Vec::new();
-
+        let mut reader = TxmlReader::from_str(txml);
+        
         loop {
-            match reader.read_event_into(&mut event_buf) {
-                Ok(Event::Start(ref e)) => match e.name().0 {
-                    b"Variable" => continue,
-                    b"Metadata" => continue,
-                    b"Root" => continue,
-                    b"Directory" => continue,
-                    b"File" => continue,
-                    _ => return false,
-                },
-                Ok(Event::Empty(e)) => match e.name().0 {
-                    b"Variable" => continue,
-                    b"Metadata" => continue,
-                    b"Root" => continue,
-                    b"Directory" => continue,
-                    b"File" => continue,
-                    _ => return false,
-                },
-                Ok(Event::Eof) => return true,
+            match reader.read_event() {
                 Err(_e) => return false,
-                _ => (),
+                Ok(TxmlEvent::Eof) => return true,
+                _ => continue,
             }
-
-            event_buf.clear();
         }
     }
     
@@ -112,30 +92,27 @@ impl TxmlStructure {
     pub fn obtain_variables(fxml: &str) -> Result<Vec<Variable>, TxmlProcessorError>
     {
         let mut variables = Vec::new();
-        
-        let mut reader = Reader::from_str(fxml);
-        let mut event_buf = Vec::new();
+
+        let mut reader = TxmlReader::from_str(fxml);
 
         loop {
-            match reader.read_event_into(&mut event_buf) {
-                Ok(Event::Empty(ref e)) => match e.name().0 {
-                    b"Variable" => {
+            match reader.read_event() {
+                Ok(TxmlEvent::Variable(state)) => match state {
+                    ElementState::Start(bytes) | ElementState::Empty(bytes) => {
                         let mut variable = Variable::new();
                         
-                        e.attributes().for_each(|attr| {
+                        bytes.attributes().for_each(|attr| {
                             variable.process_attribute(attr.expect("Error reading attribute"))
                         });
                         
                         variables.push(variable);
                     }
-                    _ => break,
-                },
-                Ok(Event::Eof) => break,
+                    _ => continue,
+                }
+                Ok(TxmlEvent::Eof) => break,
                 Err(_e) => return Err(TxmlProcessorError::UnknownParseError),
                 _ => continue,
             }
-
-            event_buf.clear();
         }
         
         Ok(variables)
@@ -208,58 +185,44 @@ impl FromStr for TxmlStructure {
             s = s.replace(variable_expression.as_str(), value.as_str());
         }
         
-        let mut reader = Reader::from_str(&s);
-        let mut event_buf = Vec::new();
+        let mut reader = TxmlReader::from_str(&s);
 
         let mut dir_queue: VecDeque<Directory> = VecDeque::new();
         let mut current_file: Option<File> = None;
 
         loop {
-            match reader.read_event_into(&mut event_buf) {
-                Ok(Event::Start(ref e)) => match e.name().0 {
-                    b"Variable" => continue,
-                    b"Metadata" => {
-                        e.attributes().for_each(|attr| {
-                            txml_structure.metadata.process_attribute(attr.expect("Error reading attribute"))
-                        });
-                    },
-                    b"Root" => {
-                        e.attributes().for_each(|attr| {
+            match reader.read_event() {
+                Ok(TxmlEvent::Root(state)) => match state {
+                    ElementState::Start(bytes) => {
+                        bytes.attributes().for_each(|attr| {
                             txml_structure.process_attribute(attr.expect("Error reading attribute"))
                         });
-                    },
-                    b"Directory" => {
+                    }
+                    ElementState::End => break,
+                    _ => continue,
+                }
+                Ok(TxmlEvent::Metadata(state)) => match state {
+                    ElementState::Start(bytes) | ElementState::Empty(bytes) => {
+                        bytes.attributes().for_each(|attr| {
+                            txml_structure.metadata.process_attribute(attr.expect("Error reading attribute"))
+                        });
+                    }
+                    _ => continue,
+                }
+                Ok(TxmlEvent::Variable(_)) => continue,
+                Ok(TxmlEvent::Directory(state)) => match state { 
+                    ElementState::Start(bytes) => {
                         let mut directory = Directory::new();
 
-                        e.attributes().for_each(|attr| {
+                        bytes.attributes().for_each(|attr| {
                             directory.process_attribute(attr.expect("Error reading attribute"));
                         });
 
                         dir_queue.push_back(directory);
                     }
-                    b"File" => {
-                        current_file = Some(File::new());
-
-                        e.attributes().for_each(|attr| {
-                            current_file
-                                .as_mut()
-                                .unwrap()
-                                .process_attribute(attr.expect("Error reading attribute"));
-                        });
-                    }
-                    _ => return Err(TxmlProcessorError::InvalidTag),
-                },
-                Ok(Event::Empty(e)) => match e.name().0 {
-                    b"Variable" => continue,
-                    b"Root" => continue,
-                    b"Metadata" => {
-                        e.attributes().for_each(|attr| {
-                            txml_structure.metadata.process_attribute(attr.expect("Error reading attribute"))
-                        });
-                    }
-                    b"Directory" => {
+                    ElementState::Empty(bytes) => {
                         let mut directory = Directory::new();
-                        e.attributes().for_each(|attr| {
+                        bytes.attributes().for_each(|attr| {
                             directory.process_attribute(attr.expect("Error reading attribute"));
                         });
 
@@ -272,9 +235,32 @@ impl FromStr for TxmlStructure {
                                 .add_directory(directory)
                         }
                     }
-                    b"File" => {
+                    ElementState::End => {
+                        if dir_queue.len() == 1 {
+                            txml_structure.add_directory(dir_queue.pop_back().unwrap())
+                        } else {
+                            let directory = dir_queue.pop_back().unwrap();
+                            dir_queue
+                                .back_mut()
+                                .expect("Shouldn't be empty")
+                                .add_directory(directory);
+                        }
+                    }
+                }
+                Ok(TxmlEvent::File(state)) => match state {
+                    ElementState::Start(bytes) => {
+                        current_file = Some(File::new());
+
+                        bytes.attributes().for_each(|attr| {
+                            current_file
+                                .as_mut()
+                                .unwrap()
+                                .process_attribute(attr.expect("Error reading attribute"));
+                        });
+                    }
+                    ElementState::Empty(bytes) => {
                         let mut file = File::new();
-                        e.attributes().for_each(|attr| {
+                        bytes.attributes().for_each(|attr| {
                             file.process_attribute(attr.expect("Error reading attribute"));
                         });
 
@@ -287,32 +273,7 @@ impl FromStr for TxmlStructure {
                                 .add_file(file)
                         }
                     }
-                    _ => return Err(TxmlProcessorError::InvalidTag),
-                },
-                Ok(Event::Text(e)) => {
-                    if let Some(ref mut file) = current_file {
-                        let content = String::from_utf8_lossy(&e).to_string();
-                        if content.replace(" ", "").is_empty() {
-                            continue;
-                        }
-
-                        file.set_text(content);
-                    }
-                }
-                Ok(Event::End(ref e)) => match e.name().0 {
-                    b"Root" => break,
-                    b"Directory" => {
-                        if dir_queue.len() == 1 {
-                            txml_structure.add_directory(dir_queue.pop_back().unwrap())
-                        } else {
-                            let directory = dir_queue.pop_back().unwrap();
-                            dir_queue
-                                .back_mut()
-                                .expect("Shouldn't be empty")
-                                .add_directory(directory);
-                        }
-                    }
-                    b"File" => {
+                    ElementState::End => {
                         let file = current_file.take().expect("Shouldn't be empty");
 
                         if dir_queue.is_empty() {
@@ -323,17 +284,25 @@ impl FromStr for TxmlStructure {
                                 .expect("Shouldn't be empty")
                                 .add_file(file)
                         }
-
-                        current_file = None;
                     }
-                    _ => continue,
-                },
-                Ok(Event::Eof) => break,
-                Err(_e) => return Err(TxmlProcessorError::UnknownParseError),
-                _ => (),
-            }
+                }
+                Ok(TxmlEvent::Text(e)) => {
+                    if let Some(ref mut file) = current_file {
+                        let content = String::from_utf8_lossy(&e).to_string();
+                        if content.replace(" ", "").is_empty() {
+                            continue;
+                        }
 
-            event_buf.clear();
+                        file.set_text(content);
+                    }
+                }
+                Ok(TxmlEvent::Eof) => break,
+                Ok(TxmlEvent::Comment(_)) => continue, 
+                Ok(TxmlEvent::Declaration(_)) => continue,
+                Err(TxmlReaderError::UnknownError) => return Err(TxmlProcessorError::UnknownParseError),
+                Err(TxmlReaderError::UnexpectedElement) => continue, 
+                Err(TxmlReaderError::UnsupportedEncoding) => continue,
+            }
         }
 
         Ok(txml_structure)
