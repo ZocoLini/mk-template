@@ -1,8 +1,4 @@
-#![allow(unused_imports)]
-
 use quick_xml::events::{BytesStart, BytesText, Event};
-
-// TODO: Continue the implementation of the TxmlReader
 
 pub enum ElementState<'a> {
     Start(BytesStart<'a>),
@@ -11,23 +7,14 @@ pub enum ElementState<'a> {
 }
 
 pub enum TxmlEvent<'a> {
-    StartRoot(BytesStart<'a>),
-    EmptyRoot(BytesStart<'a>),
-    EndRoot,
-    StartMetadata(BytesStart<'a>),
-    EmptyMetadata(BytesStart<'a>),
-    EndMetadata,
-    StartVariable(BytesStart<'a>),
-    EmptyVariable(BytesStart<'a>),
-    EndVariable,
-    StartDirectory(BytesStart<'a>),
-    EmptyDirectory(BytesStart<'a>),
-    EndDirectory,
-    StartFile(BytesStart<'a>),
-    EmptyFile(BytesStart<'a>),
-    EndFile,
+    Root(ElementState<'a>),
+    Metadata(ElementState<'a>),
+    Variable(ElementState<'a>),
+    Directory(ElementState<'a>),
+    File(ElementState<'a>),
     Text(BytesText<'a>),
-    Comment(BytesText<'a>),
+    Comment(()),
+    Declaration(()),
     Eof,
 }
 
@@ -48,32 +35,33 @@ impl<'a> TxmlReader<'a> {
 
         match self.xml_reader.read_event_into(&mut self.event_buff) {
             Ok(Event::Start(a)) => match a.name().0 {
-                b"Root" => Ok(TxmlEvent::StartRoot(a)),
-                b"Metadata" => Ok(TxmlEvent::StartMetadata(a)),
-                b"Variable" => Ok(TxmlEvent::StartVariable(a)),
-                b"Directory" => Ok(TxmlEvent::StartDirectory(a)),
-                b"File" => Ok(TxmlEvent::StartFile(a)),
+                b"Root" => Ok(TxmlEvent::Root(ElementState::Start(a))),
+                b"Metadata" => Ok(TxmlEvent::Metadata(ElementState::Start(a))),
+                b"Variable" => Ok(TxmlEvent::Variable(ElementState::Start(a))),
+                b"Directory" => Ok(TxmlEvent::Directory(ElementState::Start(a))),
+                b"File" => Ok(TxmlEvent::File(ElementState::Start(a))),
                 _ => Err(TxmlReaderError::UnexpectedElement),
             },
             Ok(Event::Empty(a)) => match a.name().0 {
-                b"Root" => Ok(TxmlEvent::EmptyRoot(a)),
-                b"Metadata" => Ok(TxmlEvent::EmptyMetadata(a)),
-                b"Variable" => Ok(TxmlEvent::EmptyVariable(a)),
-                b"Directory" => Ok(TxmlEvent::EmptyDirectory(a)),
-                b"File" => Ok(TxmlEvent::EmptyFile(a)),
+                b"Root" => Ok(TxmlEvent::Root(ElementState::Empty(a))),
+                b"Metadata" => Ok(TxmlEvent::Metadata(ElementState::Empty(a))),
+                b"Variable" => Ok(TxmlEvent::Variable(ElementState::Empty(a))),
+                b"Directory" => Ok(TxmlEvent::Directory(ElementState::Empty(a))),
+                b"File" => Ok(TxmlEvent::File(ElementState::Empty(a))),
                 _ => Err(TxmlReaderError::UnexpectedElement),
             }
             Ok(Event::Text(a)) => Ok(TxmlEvent::Text(a)),
             Ok(Event::End(a)) => match a.name().0 {
-                b"Root" => Ok(TxmlEvent::EndRoot),
-                b"Metadata" => Ok(TxmlEvent::EndMetadata),
-                b"Variable" => Ok(TxmlEvent::EndVariable),
-                b"Directory" => Ok(TxmlEvent::EndDirectory),
-                b"File" => Ok(TxmlEvent::EndFile),
+                b"Root" => Ok(TxmlEvent::Root(ElementState::End)),
+                b"Metadata" => Ok(TxmlEvent::Metadata(ElementState::End)),
+                b"Variable" => Ok(TxmlEvent::Variable(ElementState::End)),
+                b"Directory" => Ok(TxmlEvent::Directory(ElementState::End)),
+                b"File" => Ok(TxmlEvent::File(ElementState::End)),
                 _ => Err(TxmlReaderError::UnexpectedElement),
             },
-            Ok(Event::Comment(a)) => Ok(TxmlEvent::Comment(a)),
+            Ok(Event::Comment(_a)) => Ok(TxmlEvent::Comment(())),
             Ok(Event::Eof) => Ok(TxmlEvent::Eof),
+            Ok(Event::Decl(_)) => Ok(TxmlEvent::Declaration(())),
             Err(_) => Err(TxmlReaderError::UnknownError),
             _ => Err(TxmlReaderError::UnsupportedEncoding),
         }
