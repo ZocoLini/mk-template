@@ -1,10 +1,10 @@
 use crate::templates::data::TemplateData;
 use crate::templates::{Template, TemplateError, SAVE_TEMPLATES_DIR};
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::{env, fs};
-use std::collections::HashMap;
-use txml_processor::Instantiable;
 use txml_processor::txml_structure::TxmlStructure;
+use txml_processor::Instantiable;
 
 pub const TXML_TEMPLATE: &str = "txml";
 
@@ -65,5 +65,14 @@ impl Template for TxmlTemplate {
 
     fn validate(&self) -> bool {
         TxmlStructure::validate_txml_file(&self.txml_file)
+    }
+
+    fn get_description(&self) -> String {
+        let txml_structure =
+            TxmlStructure::from_txml_file(&self.txml_file).expect("Should be a valid TXML file.");
+
+        let description = txml_structure.metadata().description.clone();
+
+        if description.is_empty() { "TXML Template".to_string() } else { description }
     }
 }

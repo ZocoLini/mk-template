@@ -2,11 +2,14 @@
 
 <Root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="https://lebastudios.org/xml-schemas/txml_schema.xsd">
+    <Metadata author="Borja Castellano" date="23/09/2024" version="1.0.0"
+              description="TXML file with the default structure so you can create your own TXML files." />
     <File name="txml" extension="xml">
         &lt;?xml version="1.0" encoding="UTF-8" ?>
-        
+
         &lt;Root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:noNamespaceSchemaLocation="https://lebastudios.org/xml-schemas/txml_schema.xsd">
+            &lt;Metadata author="@author" date="@date" version="1.0.0" description="Generated with MK-Template" />
         &lt;/Root>
     </File>
 </Root>

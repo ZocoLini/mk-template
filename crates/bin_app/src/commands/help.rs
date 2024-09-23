@@ -22,6 +22,7 @@ Options:
                 -as-dir         Optional: Treat the path as a directory template.
 
     list        List all available templates.
+                -d              Optional: Show the description of the templates.
 
     rm          Remove a template by name.
                 -n <Name>       Name of the template to remove.

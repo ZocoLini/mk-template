@@ -85,6 +85,10 @@ impl Template for DirTemplate {
     fn validate(&self) -> bool {
         self.dir.is_dir()
     }
+
+    fn get_description(&self) -> String {
+        "A directory template. This type of templates can't have a custom description.".to_string()
+    }
 }
 
 fn copy_dir_all(src: &Path, dst: &Path) -> io::Result<()> {

@@ -556,6 +556,11 @@ mod tests {
 <Root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="https://lebastudios.org/xml-schemas/txml_schema.xsd">
     <Metadata author="Borja Castellano" date="22/09/2024" version="1.0.0" description="Testing metadata info"/>
+    <Directory name="${VAR1}" >
+        <File name="${VAR2}" extension="txt" >
+            ${VAR2} content
+        </File>
+    </Directory>
 </Root>        
         "#;
 

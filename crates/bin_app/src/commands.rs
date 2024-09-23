@@ -5,9 +5,9 @@ mod spawn;
 mod version;
 mod help;
 
-use crate::commands::CommandBuildError::NotRecognisedCommand;
 use std::collections::HashMap;
 use crate::commands::add::Add;
+use crate::commands::help::Help;
 use crate::commands::list::List;
 use crate::commands::remove::Remove;
 use crate::commands::spawn::Spawn;
@@ -38,8 +38,7 @@ pub fn try_execute(s: &str) -> Result<(), CommandBuildError>
         "rm" => Ok(Remove::execute(flags)),
         "list" => Ok(List::execute(flags)),
         "version" => Ok(Version::execute(flags)),
-        "help" => Ok(help::Help::execute(flags)),
-        _ => Err(NotRecognisedCommand),
+        _ => Ok(Help::execute(flags)),
     }
 }
 
@@ -50,7 +49,6 @@ pub fn try_execute(s: &str) -> Result<(), CommandBuildError>
 #[derive(Debug)]
 pub enum CommandBuildError
 {
-    NotRecognisedCommand,
     NotEnoughArgsIntroduced,
 }
 
