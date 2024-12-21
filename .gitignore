@@ -94,3 +94,4 @@ fabric.properties
 .idea/caches/build_file_checksums.ser
 
 # Own
+copy_schema_to_server.sh
