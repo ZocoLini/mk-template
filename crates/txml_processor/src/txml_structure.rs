@@ -129,9 +129,8 @@ impl TxmlStructure {
 
 impl AttributeHandler for TxmlStructure {
     fn process_attribute(&mut self, attr: Attribute) {
-        // renamable enables compatibility with older versions
         match attr.key.0 {
-            b"renameable" | b"renamable" => self.renameable = String::from_utf8_lossy(&attr.value).to_string() == "true",
+            b"renameable" => self.renameable = String::from_utf8_lossy(&attr.value).to_string() == "true",
             _ => (),
         }
     }
