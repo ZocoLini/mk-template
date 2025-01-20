@@ -12,7 +12,7 @@
                 </xs:choice>
             </xs:sequence>
 
-            <xs:attribute name="renameable" type="xs:boolean" default="true"/>
+            <xs:attribute name="renamable" type="xs:boolean" default="true"/>
         </xs:complexType>
     </xs:element>
 
