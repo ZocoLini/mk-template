@@ -19,7 +19,7 @@ pub struct TxmlStructure {
     files: Vec<File>,
     directories: Vec<Directory>,
     metadata: TemplateMetadata,
-    renamable: bool,
+    renameable: bool,
 }
 
 impl TxmlStructure {
@@ -28,7 +28,7 @@ impl TxmlStructure {
             files: Vec::new(),
             directories: Vec::new(),
             metadata: TemplateMetadata::new(),
-            renamable: true,
+            renameable: true,
         }
     }
 
@@ -130,7 +130,7 @@ impl TxmlStructure {
 impl AttributeHandler for TxmlStructure {
     fn process_attribute(&mut self, attr: Attribute) {
         match attr.key.0 {
-            b"renamable" => self.renamable = String::from_utf8_lossy(&attr.value).to_string() == "true",
+            b"renameable" => self.renameable = String::from_utf8_lossy(&attr.value).to_string() == "true",
             _ => (),
         }
     }
@@ -319,7 +319,7 @@ impl Instantiable for TxmlStructure {
     }
 
     fn instantiate_with_name(&self, dir: &PathBuf, name: &str) {
-        if self.files.len() + self.directories.len() > 1 || !self.renamable {
+        if self.files.len() + self.directories.len() > 1 || !self.renameable {
             self.instantiate(dir);
             return;
         }
