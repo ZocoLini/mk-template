@@ -68,10 +68,10 @@ impl Template for TxmlTemplate {
     }
 
     fn get_description(&self) -> String {
-        let txml_structure =
-            TxmlStructure::from_txml_file(&self.txml_file).expect("Should be a valid TXML file.");
+        let metadata =
+            TxmlStructure::get_txml_metadata(&self.txml_file).expect("Should be a valid TXML file.");
 
-        let description = txml_structure.metadata().description.clone();
+        let description = metadata.description;
 
         if description.is_empty() { "TXML Template".to_string() } else { description }
     }

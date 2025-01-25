@@ -77,6 +77,49 @@ impl TxmlStructure {
         Self::from_str(txml_content.as_str())
     }
 
+    pub fn get_txml_metadata(txml: &PathBuf) -> Result<TemplateMetadata, TxmlProcessorError> {
+        if !txml.exists() {
+            return Err(TxmlProcessorError::InvalidDirectory);
+        }
+        if !txml.is_file() {
+            return Err(TxmlProcessorError::InvalidDirectory);
+        }
+
+        let template_content = fs::read_to_string(txml).expect("Error reading file");
+        let mut reader = TxmlReader::from_str(template_content.as_str());
+        let mut metadata = TemplateMetadata::new();
+
+        loop {
+            match reader.read_event() {
+                Ok(TxmlEvent::Root(state)) => match state {
+                    ElementState::Start(_) => continue,
+                    ElementState::End => break,
+                    _ => continue,
+                }
+                Ok(TxmlEvent::Metadata(state)) => match state {
+                    ElementState::Start(bytes) | ElementState::Empty(bytes) => {
+                        bytes.attributes().for_each(|attr| {
+                            metadata.process_attribute(attr.expect("Error reading attribute"))
+                        });
+                    }
+                    ElementState::End => break,
+                }
+                Ok(TxmlEvent::Variable(_)) => continue,
+                Ok(TxmlEvent::Directory(_)) => continue,
+                Ok(TxmlEvent::File(_)) => continue,
+                Ok(TxmlEvent::Text(_)) => continue,
+                Ok(TxmlEvent::Eof) => break,
+                Ok(TxmlEvent::Comment(_)) => continue,
+                Ok(TxmlEvent::Declaration(_)) => continue,
+                Err(TxmlReaderError::UnknownError) => return Err(TxmlProcessorError::UnknownParseError),
+                Err(TxmlReaderError::UnexpectedElement) => continue,
+                Err(TxmlReaderError::UnsupportedEncoding) => continue,
+            }
+        }
+
+        Ok(metadata)
+    }
+
     pub fn from_path(path: &PathBuf) -> Result<TxmlStructure, io::Error> {
         let mut txml_structure = TxmlStructure::new();
 

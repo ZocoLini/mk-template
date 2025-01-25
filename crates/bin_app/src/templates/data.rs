@@ -57,4 +57,9 @@ impl TemplateData
             _ => panic!("Invalid template class."),
         }
     }
+    
+    pub fn get_description(&self) -> String
+    {
+        self.to_template().get_description()
+    }
 }

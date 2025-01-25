@@ -1,1 +1,2 @@
 -> Add a info command that shows all the information about the template
+-> Migrate all the bash tests to integration tests

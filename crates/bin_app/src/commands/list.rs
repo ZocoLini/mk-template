@@ -11,7 +11,7 @@ impl Command for List{
             println!("{}", template_name);
             
             if _flags.contains_key("-d") { 
-                println!("----| Description: {}", template_data.to_template().get_description());
+                println!("----| Description: {}", template_data.get_description());
             }
         }
     }

@@ -4,8 +4,6 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::{fs, io};
 
-// region: Directory
-
 pub struct Directory {
     name: String,
     out_command: String,
@@ -156,10 +154,6 @@ impl FsElement for Directory {
         Ok(dir_element)
     }
 }
-
-// endregion: Directory
-
-// region: File
 
 pub struct File {
     name: String,
@@ -365,10 +359,6 @@ fn is_blank(text: &str) -> bool {
     text.chars().all(char::is_whitespace)
 }
 
-// endregion: File
-
-// region: Variable
-
 pub struct Variable {
     name: String,
     value: String,
@@ -407,10 +397,6 @@ impl AttributeHandler for Variable {
         }
     }
 }
-
-// endregion: Variable
-
-// region: TxmlMetadata
 
 pub struct TemplateMetadata {
     pub author: String,
@@ -452,7 +438,6 @@ impl TxmlElement for TemplateMetadata {
     }
 }
 
-// endregion: TxmlMetadata
 
 #[cfg(test)]
 mod tests {
