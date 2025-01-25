@@ -95,3 +95,4 @@ fabric.properties
 
 # Own
 copy_schema_to_server.sh
+.env
