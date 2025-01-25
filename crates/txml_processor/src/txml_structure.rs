@@ -328,13 +328,10 @@ impl FromStr for TxmlStructure {
                                 .add_file(file)
                         }
                     }
-                }
+                }// TODO: Make binary files savable as text files after asking permission
                 Ok(TxmlEvent::Text(e)) => {
                     if let Some(ref mut file) = current_file {
                         let content = String::from_utf8_lossy(&e).to_string();
-                        if content.replace(" ", "").is_empty() {
-                            continue;
-                        }
 
                         file.set_text(content);
                     }

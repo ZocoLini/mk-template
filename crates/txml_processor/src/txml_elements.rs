@@ -35,27 +35,27 @@ impl Directory {
 impl TxmlElement for Directory {
     fn into_txml_element(self) -> String {
         let mut result = format!("<Directory name=\"{}\"", self.name);
-        
+
         if !self.in_command.is_empty() {
             result.push_str(&format!(" in_command=\"{}\"", self.in_command));
         }
-        
+
         if !self.out_command.is_empty() {
             result.push_str(&format!(" out_command=\"{}\"", self.out_command));
         }
-        
+
         result.push_str(">\n");
-        
+
         for file in self.files {
             result.push_str(&file.into_txml_element());
         }
-        
+
         for directory in self.directories {
             result.push_str(&directory.into_txml_element());
         }
-        
+
         result.push_str("</Directory>\n");
-        
+
         result
     }
 }
@@ -136,7 +136,12 @@ impl FsElement for Directory {
         }
 
         let mut dir_element = Directory {
-            name: dir.file_name().expect("Should have a name").to_str().unwrap().to_string(),
+            name: dir
+                .file_name()
+                .expect("Should have a name")
+                .to_str()
+                .unwrap()
+                .to_string(),
             out_command: String::from(""),
             in_command: String::from(""),
             files: Vec::new(),
@@ -147,8 +152,11 @@ impl FsElement for Directory {
             let entry = entry?;
             let path = entry.path();
 
-            if path.is_file() { dir_element.files.push(File::from_path(&path)?) }
-            else { dir_element.directories.push(Directory::from_path(&path)?) }
+            if path.is_file() {
+                dir_element.files.push(File::from_path(&path)?)
+            } else {
+                dir_element.directories.push(Directory::from_path(&path)?)
+            }
         }
 
         Ok(dir_element)
@@ -160,6 +168,7 @@ pub struct File {
     extension: String,
     command: String,
     content: String,
+    is_binary: bool,
 }
 
 impl File {
@@ -169,6 +178,7 @@ impl File {
             extension: String::new(),
             command: String::new(),
             content: String::new(),
+            is_binary: false,
         }
     }
 
@@ -180,23 +190,31 @@ impl File {
 impl TxmlElement for File {
     fn into_txml_element(self) -> String {
         let mut result = format!("<File name=\"{}\"", self.name);
-        
-        if !self.extension.is_empty() { 
+
+        if !self.extension.is_empty() {
             result.push_str(&format!(" extension=\"{}\"", self.extension));
         }
-        
+
         if !self.command.is_empty() {
             result.push_str(&format!(" command=\"{}\"", self.command));
         }
-        
-        result.push_str(">\n");
-        
-        result.push_str(&reverse_escape_xml(&self.content));
-        
-        result.push_str("\n");
-        
+
+        if self.is_binary {
+            result.push_str(" binary=\"true\"");
+        }
+
+        result.push_str(">");
+
+        let file_content = if self.is_binary {
+            self.content
+        } else {
+            reverse_escape_xml(&self.content)
+        };
+
+        result.push_str(&file_content);
+
         result.push_str("</File>\n");
-        
+
         result
     }
 }
@@ -219,12 +237,16 @@ impl Instantiable for File {
             return;
         }
 
-        let content = remove_indentation(&self.content);
-        let content = escape_xml(&content);
+        let content: Vec<u8> = if self.is_binary {
+            hex_to_bytes(&self.content).to_vec()
+        } else {
+            let content = remove_indentation(&self.content);
+            escape_xml(&content).as_bytes().to_vec()
+        };
 
         fs::File::create(&new_path_buff)
             .expect("Error creating file")
-            .write_all(content.as_bytes())
+            .write_all(content.as_slice())
             .expect("Error writing to file");
 
         if !self.command.is_empty() {
@@ -239,23 +261,34 @@ impl Instantiable for File {
 }
 
 impl FsElement for File {
-    fn from_path(path: &PathBuf) -> Result<Self, io::Error>
-    {
+    fn from_path(path: &PathBuf) -> Result<Self, io::Error> {
         if !path.is_file() {
-            return Err(io::Error::new(
-                io::ErrorKind::NotFound,
-                "File not found",
-            ));
+            return Err(io::Error::new(io::ErrorKind::NotFound, "File not found"));
         }
 
+        let (content, is_binary) = if let Ok(content) = fs::read_to_string(path) {
+            (content, false)
+        } else {
+            let content = fs::read(path)
+                .map_err(|_| io::Error::new(io::ErrorKind::Other, "Error reading file"))?;
+            (bytes_to_hex(&content), true)
+        };
+
         let file_element = File {
-            name: path.file_stem().expect("Should have a name").to_str().unwrap().to_string(),
-            extension: path.extension()
-                           .and_then(|ext| ext.to_str())
-                           .unwrap_or("")
-                           .to_string(),
+            name: path
+                .file_stem()
+                .expect("Should have a name")
+                .to_str()
+                .unwrap()
+                .to_string(),
+            extension: path
+                .extension()
+                .and_then(|ext| ext.to_str())
+                .unwrap_or("")
+                .to_string(),
             command: String::from(""),
-            content: fs::read_to_string(path).map_err(|_| io::Error::new(io::ErrorKind::Other, "Error reading file"))?,
+            content,
+            is_binary,
         };
 
         Ok(file_element)
@@ -274,12 +307,28 @@ impl AttributeHandler for File {
             b"command" => {
                 self.command = String::from_utf8_lossy(&attribute.value).to_string();
             }
+            b"binary" => {
+                if attribute.value.iter().as_slice() == b"true" {
+                    self.is_binary = true;
+                }
+            }
             _ => println!(
                 "Unknown attribute for File: {}",
                 String::from_utf8_lossy(attribute.key.0)
             ),
         }
     }
+}
+
+fn hex_to_bytes(hex: &str) -> Vec<u8> {
+    (0..hex.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(&hex[i..i + 2], 16).unwrap())
+        .collect()
+}
+
+fn bytes_to_hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{:02X}", b)).collect()
 }
 
 fn escape_xml(text: &str) -> String {
@@ -371,11 +420,11 @@ impl Variable {
             value: String::new(),
         }
     }
-    
+
     pub fn get_name(&self) -> &str {
         self.name.as_str()
     }
-    
+
     pub fn get_value(&self) -> &str {
         self.value.as_str()
     }
@@ -387,9 +436,7 @@ impl AttributeHandler for Variable {
             b"name" => {
                 self.name = String::from_utf8_lossy(&attribute.value).to_string();
             }
-            b"value" => {
-                self.value = String::from_utf8_lossy(&attribute.value).to_string()
-            }
+            b"value" => self.value = String::from_utf8_lossy(&attribute.value).to_string(),
             _ => println!(
                 "Unknown attribute for Variable: {}",
                 String::from_utf8_lossy(attribute.key.0)
@@ -422,7 +469,9 @@ impl AttributeHandler for TemplateMetadata {
             b"author" => self.author = String::from_utf8_lossy(&attribute.value).to_string(),
             b"date" => self.date = String::from_utf8_lossy(&attribute.value).to_string(),
             b"version" => self.version = String::from_utf8_lossy(&attribute.value).to_string(),
-            b"description" => self.description = String::from_utf8_lossy(&attribute.value).to_string(),
+            b"description" => {
+                self.description = String::from_utf8_lossy(&attribute.value).to_string()
+            }
             _ => (),
         }
     }
@@ -438,17 +487,24 @@ impl TxmlElement for TemplateMetadata {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-    use crate::txml_elements::{Directory, TemplateMetadata};
+    use super::*;
     use crate::txml_structure::TxmlStructure;
     use crate::TxmlElement;
+    use std::str::FromStr;
 
     #[test]
-    fn dir_into_txml_format_test()
-    {
+    fn test_bin_to_hex_to_bin() {
+        let bin_text = b"Hello, world!";
+        let hex_text = bytes_to_hex(bin_text);
+        let new_bin_text = hex_to_bytes(hex_text.as_str());
+
+        assert_eq!(bin_text.to_vec(), new_bin_text);
+    }
+
+    #[test]
+    fn dir_into_txml_format_test() {
         let dir = Directory {
             name: String::from("pepe"),
             out_command: String::from("git init"),
@@ -456,30 +512,29 @@ mod tests {
             files: Vec::new(),
             directories: Vec::new(),
         };
-        
+
         let txml = dir.into_txml_element();
-        
+
         assert_eq!(txml, "<Directory name=\"pepe\" in_command=\"ls -l\" out_command=\"git init\">\n</Directory>\n");
     }
-    
+
     #[test]
-    fn file_into_txml_format_test()
-    {
+    fn file_into_txml_format_test() {
         let file = crate::txml_elements::File {
             name: String::from("pepe"),
             extension: String::from("rs"),
             command: String::from("cargo build"),
             content: String::from("fn main() { println!(\"Hola, mundo!\"); }"),
+            is_binary: false,
         };
-        
+
         let txml = file.into_txml_element();
-        
-        assert_eq!(txml, "<File name=\"pepe\" extension=\"rs\" command=\"cargo build\">\nfn main() { println!(&quot;Hola, mundo!&quot;); }\n</File>\n");
+
+        assert_eq!(txml, "<File name=\"pepe\" extension=\"rs\" command=\"cargo build\">fn main() { println!(&quot;Hola, mundo!&quot;); }</File>\n");
     }
-    
+
     #[test]
-    fn txml_structure_into_txml_format_test()
-    {
+    fn txml_structure_into_txml_format_test() {
         let mut txml_structure = TxmlStructure::new();
 
         let mut dir = Directory {
@@ -495,29 +550,30 @@ mod tests {
             extension: String::from("rs"),
             command: String::from("cargo build"),
             content: String::from("fn main() { println!(\"Hola, mundo!\"); }"),
+            is_binary: false,
         };
-        
+
         dir.add_file(file);
-        
+
         txml_structure.add_directory(dir);
-        
+
         let file = crate::txml_elements::File {
             name: String::from("pepa"),
             extension: String::from("rs"),
             command: String::from("cargo build"),
             content: String::from("fn main() { println!(\"Hola, mundo!\"); }"),
+            is_binary: false,
         };
-        
+
         txml_structure.add_file(file);
-        
+
         let txml_string = txml_structure.into_txml_element();
-        
+
         assert!(TxmlStructure::from_str(txml_string.as_str()).is_ok());
     }
 
     #[test]
-    fn metadata_into_txml_format_test()
-    {
+    fn metadata_into_txml_format_test() {
         let expected = r#"
         <Metadata author="Borja Castellano" date="22/09/2024" version="1.0.0" description="Testing metadata info"/>
         "#;
@@ -527,14 +583,14 @@ mod tests {
             date: String::from("22/09/2024"),
             version: String::from("1.0.0"),
             description: String::from("Testing metadata info"),
-        }.into_txml_element();
+        }
+        .into_txml_element();
 
         assert_eq!(expected.trim(), metadata.trim());
     }
 
     #[test]
-    fn txml_metadata_parser_test() 
-    {
+    fn txml_metadata_parser_test() {
         let txml = r#"
 <?xml version="1.0" encoding="UTF-8" ?>
 
@@ -554,6 +610,9 @@ mod tests {
         assert_eq!(txml_structure.metadata().author, "Borja Castellano");
         assert_eq!(txml_structure.metadata().date, "22/09/2024");
         assert_eq!(txml_structure.metadata().version, "1.0.0");
-        assert_eq!(txml_structure.metadata().description, "Testing metadata info");
+        assert_eq!(
+            txml_structure.metadata().description,
+            "Testing metadata info"
+        );
     }
 }
