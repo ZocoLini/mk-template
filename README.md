@@ -1,8 +1,6 @@
 # MK-Template
 
-**MK-Template** is a command-line application that facilitates the creation and management of 
-project, files and directory templates. It allows users to automate the creation of 
-repetitive structures with predefined templates.
+**MK-Template** is a command-line application that facilitates the creation and management of project, files and directory templates. It allows users to automate the creation of repetitive structures with predefined templates.
 
 **Basic Knowledge:**
 <ul>
@@ -112,8 +110,7 @@ $ mkt rm -n my-crates # Remove the my-crates template
 
 ## Using TXML
 
-TXML is a simple XML format that defines the structure of a template. It is used to create templates that can be
-spawned using the **MK-Template** application. The TXML schema is available at [lebastudios.org](https://lebastudios.org/xml-schemas/txml_schema.xsd).
+TXML is a simple XML format that defines the structure of a template. It is used to create templates that can be spawned using the **MK-Template** application. The TXML schema is available at [lebastudios.org](https://lebastudios.org/xml-schemas/txml_schema.xsd).
 
 Visit the [TXML Documentation](./TXML.md) for more information on how to use TXML.
 
